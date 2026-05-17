@@ -1,15 +1,13 @@
 {
   "name": "goldentics-app",
   "version": "1.0.0",
+  "private": true,
   "description": "Gold price prediction app",
   "license": "ISC",
   "author": "Goldentics Team",
-  "type": "module",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "dependencies": {
-    "express": "^5.2.1"
+    "dev": "npm run dev --prefix backend",
+    "start": "npm start --prefix backend",
+    "install:backend": "npm install --prefix backend"
   }
 }

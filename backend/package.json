@@ -1,0 +1,20 @@
+{
+  "name": "goldentics-backend",
+  "version": "1.0.0",
+  "description": "Goldentics API - Gold price prediction backend",
+  "license": "ISC",
+  "author": "Goldentics Team",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "axios": "^1.9.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.2.1"
+  }
+}
