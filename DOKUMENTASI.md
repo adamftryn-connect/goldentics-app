@@ -59,7 +59,6 @@ goldentics-app/
 │   ├── package.json
 │   └── vite.config.js          # Vite config + proxy /api → localhost:5000
 │
-├── CLAUDE.md                   # Instruksi kerja dengan Claude (di-gitignore, tidak di-push)
 ├── DOKUMENTASI.md              # File ini
 └── README.md
 ```
