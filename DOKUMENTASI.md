@@ -155,4 +155,3 @@ HUGGING_FACE_API_URL=-
 - Reformat `index.css` — semua property dipindah ke baris terpisah, indentasi konsisten
 - Pecah CSS per halaman: `index.css` (global) + 5 file CSS di `src/pages/`
 - Tiap halaman JSX import CSS-nya sendiri (`./Beranda.css`, dst.)
-- Tambah `CLAUDE.md` ke `.gitignore` + `git rm --cached CLAUDE.md` agar tidak ter-push
