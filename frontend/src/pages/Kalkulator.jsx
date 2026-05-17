@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Navbar from '../components/Navbar'
 import FooterSimple from '../components/FooterSimple'
+import './Kalkulator.css'
 
 const PRICE = 2700000
 

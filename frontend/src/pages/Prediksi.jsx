@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Navbar from '../components/Navbar'
 import FooterSimple from '../components/FooterSimple'
+import './Prediksi.css'
 
 function Prediksi() {
   const [showResult, setShowResult] = useState(false)

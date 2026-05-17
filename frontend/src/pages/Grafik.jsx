@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Navbar from '../components/Navbar'
 import FooterSimple from '../components/FooterSimple'
+import './Grafik.css'
 
 const TABS = ['7 Hari', '1 Bulan', '3 Bulan', '1 Tahun']
 
