@@ -131,7 +131,6 @@ HUGGING_FACE_API_URL=-
 - **Prediksi** menggunakan `useState` untuk toggle empty state ↔ result panel.
 - **Grafik** menggunakan `useState` untuk tab filter (7 Hari / 1 Bulan / dst).
 - **Navbar** menggunakan `NavLink` dari React Router — class `active` otomatis berdasarkan route aktif.
-- **CLAUDE.md** di-gitignore agar tidak ter-push ke remote (instruksi pribadi untuk Claude).
 - Backend data masih **dummy/static** di frontend — belum disambung ke API (next step).
 
 ---
