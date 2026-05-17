@@ -8,3 +8,4 @@ backend/.env
 
 # Claude Code internal
 .claude/
+CLAUDE.md

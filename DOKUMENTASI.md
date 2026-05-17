@@ -43,18 +43,23 @@ goldentics-app/
 │   │   │   └── FooterSimple.jsx # Footer ringkas untuk halaman dalam
 │   │   ├── pages/
 │   │   │   ├── Beranda.jsx     # Halaman utama (hero, edu sections, CTA)
+│   │   │   ├── Beranda.css     # CSS khusus halaman Beranda
 │   │   │   ├── Grafik.jsx      # Grafik + tabel histori harga
+│   │   │   ├── Grafik.css      # CSS khusus halaman Grafik
 │   │   │   ├── Kalkulator.jsx  # Kalkulator harga emas (2 mode)
+│   │   │   ├── Kalkulator.css  # CSS khusus halaman Kalkulator
 │   │   │   ├── Prediksi.jsx    # Form prediksi AI + result panel
-│   │   │   └── Tentang.jsx     # Info proyek, tim, tech stack
+│   │   │   ├── Prediksi.css    # CSS khusus halaman Prediksi
+│   │   │   ├── Tentang.jsx     # Info proyek, tim, tech stack
+│   │   │   └── Tentang.css     # CSS khusus halaman Tentang
 │   │   ├── App.jsx             # BrowserRouter + Routes
 │   │   ├── main.jsx            # Entry point React
-│   │   └── index.css           # Semua CSS (combined dari 5 halaman desain)
+│   │   └── index.css           # CSS global: reset, navbar, page-hero, field shared, footer-simple
 │   ├── index.html
 │   ├── package.json
 │   └── vite.config.js          # Vite config + proxy /api → localhost:5000
 │
-├── CLAUDE.md                   # Instruksi kerja dengan Claude
+├── CLAUDE.md                   # Instruksi kerja dengan Claude (di-gitignore, tidak di-push)
 ├── DOKUMENTASI.md              # File ini
 └── README.md
 ```
@@ -111,20 +116,22 @@ Salin dari `.env.example`:
 ```env
 NODE_ENV=development
 PORT=5000
-SERVER_URL=http://localhost:5000
-HUGGING_FACE_API_KEY=your_api_key_here
-HUGGING_FACE_API_URL=https://api-inference.huggingface.co/models/sample-model
+SERVER_URL=-
+HUGGING_FACE_API_KEY=-
+HUGGING_FACE_API_URL=-
 ```
 
 ---
 
 ## Catatan Teknis
 
+- **CSS dipecah per halaman**: `index.css` hanya untuk global (reset, navbar, page-hero, field shared, footer-simple). Tiap halaman punya CSS-nya sendiri di `src/pages/`.
 - **CSS conflicts dihindari** dengan rename class: `.main-grafik` (halaman Grafik) dan `.about-info-rows`/`.about-info-row` (halaman Tentang) — berbeda dari `.main` dan `.info-rows` yang dipakai halaman Kalkulator.
 - **Kalkulator** menggunakan React `useState` untuk kalkulasi real-time tanpa reload.
 - **Prediksi** menggunakan `useState` untuk toggle empty state ↔ result panel.
 - **Grafik** menggunakan `useState` untuk tab filter (7 Hari / 1 Bulan / dst).
 - **Navbar** menggunakan `NavLink` dari React Router — class `active` otomatis berdasarkan route aktif.
+- **CLAUDE.md** di-gitignore agar tidak ter-push ke remote (instruksi pribadi untuk Claude).
 - Backend data masih **dummy/static** di frontend — belum disambung ke API (next step).
 
 ---
@@ -143,3 +150,9 @@ HUGGING_FACE_API_URL=https://api-inference.huggingface.co/models/sample-model
   - `Prediksi.jsx` — toggle result panel
   - `Tentang.jsx` — halaman statis
 - Dev server berjalan di `http://localhost:5173` tanpa error
+
+### [2026-05-17] — Sesi 2: Refactor CSS + Gitignore
+- Reformat `index.css` — semua property dipindah ke baris terpisah, indentasi konsisten
+- Pecah CSS per halaman: `index.css` (global) + 5 file CSS di `src/pages/`
+- Tiap halaman JSX import CSS-nya sendiri (`./Beranda.css`, dst.)
+- Tambah `CLAUDE.md` ke `.gitignore` + `git rm --cached CLAUDE.md` agar tidak ter-push
