@@ -3,9 +3,11 @@ import {
   isHuggingFaceConfigured,
 } from "./huggingface.service.js";
 import { getLatestGoldPrice } from "./gold.service.js";
-
-const predictionHistory = [];
-let nextId = 1;
+import {
+  insertPrediction,
+  findPredictionsByUserId,
+} from "../repositories/prediction.repository.js";
+import { isDatabaseAvailable } from "../repositories/goldPrice.repository.js";
 
 function addDays(baseDate, days) {
   const date = new Date(baseDate);
@@ -23,7 +25,7 @@ function buildRecommendation(trend, percentageChange) {
   return "Pertimbangkan untuk menahan emas dan pantau perkembangan harga";
 }
 
-function extractModelPrediction(hfResponse, currentPrice) {
+function extractModelPrediction(hfResponse) {
   if (hfResponse == null) {
     return null;
   }
@@ -62,8 +64,12 @@ function mockPrediction(currentPrice, predictionDays) {
   return Math.round(currentPrice * (1 + changeRatio));
 }
 
-export async function predictGoldPrice(gramOfGold, predictionDays = 30) {
-  const currentPricePerGram = getLatestGoldPrice();
+export async function predictGoldPrice(
+  gramOfGold,
+  predictionDays = 30,
+  userId = null
+) {
+  const currentPricePerGram = await getLatestGoldPrice();
   const currentTotal = currentPricePerGram * gramOfGold;
 
   let predictedPricePerGram = currentPricePerGram;
@@ -80,7 +86,7 @@ export async function predictGoldPrice(gramOfGold, predictionDays = 30) {
 
   if (isHuggingFaceConfigured()) {
     const hfResponse = await callHuggingFacePrediction(hfPayload);
-    const extracted = extractModelPrediction(hfResponse, currentPricePerGram);
+    const extracted = extractModelPrediction(hfResponse);
 
     if (extracted != null && !Number.isNaN(extracted)) {
       predictedPricePerGram = Math.round(extracted);
@@ -118,24 +124,20 @@ export async function predictGoldPrice(gramOfGold, predictionDays = 30) {
     modelUsed,
   };
 
-  savePredictionHistory(result);
+  if (userId && (await isDatabaseAvailable())) {
+    await insertPrediction(userId, result, predictionDays);
+  }
 
   return result;
 }
 
-function savePredictionHistory(result) {
-  predictionHistory.unshift({
-    id: nextId++,
-    gramOfGold: result.gramOfGold,
-    predictedPrice: result.predictedPrice,
-    trend: result.trend,
-    createdAt: new Date().toISOString(),
-  });
-}
-
-export function getPredictionHistory(limit = 10, offset = 0) {
+export async function getPredictionHistory(userId, limit = 10, offset = 0) {
   const safeLimit = Math.max(1, Math.min(Number(limit) || 10, 100));
   const safeOffset = Math.max(0, Number(offset) || 0);
 
-  return predictionHistory.slice(safeOffset, safeOffset + safeLimit);
+  if (!(await isDatabaseAvailable())) {
+    return [];
+  }
+
+  return findPredictionsByUserId(userId, safeLimit, safeOffset);
 }

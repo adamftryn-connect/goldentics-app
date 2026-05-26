@@ -1,4 +1,9 @@
 import { goldHistoricalData } from "../data/data-gold.js";
+import {
+  isDatabaseAvailable,
+  findAllGoldPrices,
+  findLatestGoldPrice,
+} from "../repositories/goldPrice.repository.js";
 
 function parseDate(value) {
   const date = new Date(value);
@@ -6,14 +11,36 @@ function parseDate(value) {
 }
 
 function toPublicRecord(entry) {
-  return {
+  const record = {
     date: entry.date,
     price: entry.price,
     currency: entry.currency,
   };
+
+  if (entry.openPrice != null) record.openPrice = entry.openPrice;
+  if (entry.highPrice != null) record.highPrice = entry.highPrice;
+  if (entry.lowPrice != null) record.lowPrice = entry.lowPrice;
+  if (entry.closePrice != null) record.closePrice = entry.closePrice;
+
+  return record;
 }
 
-export function getGoldHistory({ period = "monthly", startDate, endDate } = {}) {
+async function loadGoldEntries() {
+  if (await isDatabaseAvailable()) {
+    const rows = await findAllGoldPrices();
+    if (rows.length > 0) {
+      return rows;
+    }
+  }
+  return [...goldHistoricalData];
+}
+
+function getLatestEntryFromList(entries) {
+  const sorted = [...entries].sort((a, b) => b.date.localeCompare(a.date));
+  return sorted[0] ?? null;
+}
+
+export async function getGoldHistory({ period = "monthly", startDate, endDate } = {}) {
   if (period !== "monthly" && period !== "yearly") {
     const err = new Error('period harus "monthly" atau "yearly"');
     err.statusCode = 400;
@@ -41,7 +68,7 @@ export function getGoldHistory({ period = "monthly", startDate, endDate } = {}) 
     throw err;
   }
 
-  let filtered = [...goldHistoricalData];
+  let filtered = await loadGoldEntries();
 
   if (start) {
     filtered = filtered.filter((item) => parseDate(item.date) >= start);
@@ -65,9 +92,34 @@ export function getGoldHistory({ period = "monthly", startDate, endDate } = {}) 
   return filtered.map(toPublicRecord);
 }
 
-export function getLatestGoldPrice() {
-  const sorted = [...goldHistoricalData].sort((a, b) =>
-    b.date.localeCompare(a.date)
-  );
-  return sorted[0]?.price ?? 0;
+export async function getLatestGoldPrice() {
+  if (await isDatabaseAvailable()) {
+    const latest = await findLatestGoldPrice();
+    if (latest) {
+      return latest.price;
+    }
+  }
+  return getLatestEntryFromList(goldHistoricalData)?.price ?? 0;
+}
+
+export async function getLatestGoldSnapshot() {
+  let latest = null;
+
+  if (await isDatabaseAvailable()) {
+    latest = await findLatestGoldPrice();
+  }
+
+  if (!latest) {
+    latest = getLatestEntryFromList(goldHistoricalData);
+  }
+
+  if (!latest) {
+    return null;
+  }
+
+  return {
+    ...toPublicRecord(latest),
+    pricePerGram: latest.price,
+    source: latest.source ?? "logammulia",
+  };
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Navbar from '../components/Navbar'
 import FooterSimple from '../components/FooterSimple'
+import { PREDICTION_PERIOD_OPTIONS } from '../api/goldenticsApi.js'
 import './Prediksi.css'
 
 function Prediksi() {
@@ -46,11 +47,12 @@ function Prediksi() {
 
               <div className="field">
                 <label>Periode Prediksi</label>
-                <select className="select-field">
-                  <option>7 Hari ke depan</option>
-                  <option>14 Hari ke depan</option>
-                  <option>30 Hari ke depan</option>
-                  <option>90 Hari ke depan</option>
+                <select className="select-field" defaultValue={30}>
+                  {PREDICTION_PERIOD_OPTIONS.map((opt) => (
+                    <option key={opt.days} value={opt.days}>
+                      {opt.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 

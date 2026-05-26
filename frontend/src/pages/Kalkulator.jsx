@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import Navbar from '../components/Navbar'
 import FooterSimple from '../components/FooterSimple'
+import { FALLBACK_PRICE_PER_GRAM } from '../config/defaults.js'
+import { formatRupiah } from '../utils/format.js'
 import './Kalkulator.css'
 
-const PRICE = 2700000
+const PRICE = FALLBACK_PRICE_PER_GRAM
 
 function Kalkulator() {
   const [mode, setMode] = useState('emas') // 'emas' | 'uang'
@@ -55,12 +57,12 @@ function Kalkulator() {
 
                 <div className="result-box">
                   <div className="r-lbl">Nilai Estimasi</div>
-                  <div className="r-val">Rp {totalEmas.toLocaleString('id-ID')}</div>
-                  <div className="r-sub">{gram || 0} gram × Rp {PRICE.toLocaleString('id-ID')}/gr</div>
+                  <div className="r-val">{formatRupiah(totalEmas)}</div>
+                  <div className="r-sub">{gram || 0} gram × {formatRupiah(PRICE)}/gr</div>
                 </div>
 
                 <div className="info-rows">
-                  <div className="info-row"><span>Harga/gram (IDR)</span><strong>Rp 2.700.000</strong></div>
+                  <div className="info-row"><span>Harga/gram (IDR)</span><strong>{formatRupiah(PRICE)}</strong></div>
                   <div className="info-row"><span>Harga/gram (USD)</span><strong>$ 165,85</strong></div>
                   <div className="info-row"><span>Kurs USD/IDR</span><strong>Rp 16.280</strong></div>
                   <div className="info-row"><span>Sumber data</span><strong>Logam Mulia Antam</strong></div>
@@ -94,7 +96,7 @@ function Kalkulator() {
                 <div className="result-box">
                   <div className="r-lbl">Emas yang Dapat Dibeli</div>
                   <div className="r-val">{totalGram} gram</div>
-                  <div className="r-sub">Rp {(parseFloat(uang) || 0).toLocaleString('id-ID')} ÷ Rp {PRICE.toLocaleString('id-ID')}/gr</div>
+                  <div className="r-sub">{formatRupiah(parseFloat(uang) || 0)} ÷ {formatRupiah(PRICE)}/gr</div>
                 </div>
 
                 <div className="info-rows">
