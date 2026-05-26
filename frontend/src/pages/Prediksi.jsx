@@ -1,11 +1,41 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import FooterSimple from '../components/FooterSimple'
-import { PREDICTION_PERIOD_OPTIONS } from '../api/goldenticsApi.js'
+import { postPredict, PREDICTION_PERIOD_OPTIONS } from '../api/goldenticsApi.js'
+import { formatRupiah, formatPercent } from '../utils/format.js'
 import './Prediksi.css'
 
 function Prediksi() {
   const [showResult, setShowResult] = useState(false)
+  const [gramOfGold, setGramOfGold] = useState('10')
+  const [predictionDays, setPredictionDays] = useState(30)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [result, setResult] = useState(null)
+
+  const periodLabel = useMemo(() => {
+    const opt = PREDICTION_PERIOD_OPTIONS.find((o) => o.days === predictionDays)
+    return opt?.label ?? `${predictionDays} Hari`
+  }, [predictionDays])
+
+  async function handlePredict() {
+    setShowResult(true)
+    setError(null)
+    setLoading(true)
+    setResult(null)
+
+    try {
+      const data = await postPredict({
+        gramOfGold: Number(gramOfGold),
+        predictionDays: Number(predictionDays),
+      })
+      setResult(data)
+    } catch (e) {
+      setError(e?.message || 'Gagal melakukan prediksi')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <>
@@ -28,7 +58,13 @@ function Prediksi() {
               <div className="field">
                 <label>Jumlah Emas yang Dimiliki</label>
                 <div className="input-wrap">
-                  <input type="number" placeholder="Contoh: 10" />
+                  <input
+                    type="number"
+                    placeholder="Contoh: 10"
+                    value={gramOfGold}
+                    onChange={(e) => setGramOfGold(e.target.value)}
+                    min="0"
+                  />
                   <span className="unit">gram</span>
                 </div>
                 <p className="field-hint">Masukkan jumlah emas dalam satuan gram</p>
@@ -47,7 +83,11 @@ function Prediksi() {
 
               <div className="field">
                 <label>Periode Prediksi</label>
-                <select className="select-field" defaultValue={30}>
+                <select
+                  className="select-field"
+                  value={predictionDays}
+                  onChange={(e) => setPredictionDays(Number(e.target.value))}
+                >
                   {PREDICTION_PERIOD_OPTIONS.map((opt) => (
                     <option key={opt.days} value={opt.days}>
                       {opt.label}
@@ -56,7 +96,9 @@ function Prediksi() {
                 </select>
               </div>
 
-              <button className="submit-btn" onClick={() => setShowResult(true)}>Dapatkan Prediksi →</button>
+              <button className="submit-btn" onClick={handlePredict} disabled={loading}>
+                {loading ? 'Memproses…' : 'Dapatkan Prediksi →'}
+              </button>
 
               <div className="disclaimer">
                 <div className="disc-title">⚠️ Penting untuk Dibaca</div>
@@ -76,22 +118,43 @@ function Prediksi() {
             ) : (
               <div style={{display:'flex',flexDirection:'column',gap:'1rem'}}>
                 <div className="result-main">
-                  <div className="rm-label">Prediksi Harga (7 Hari)</div>
-                  <div className="rm-price">Rp 2.780.000<span className="rm-unit">/gr</span></div>
-                  <div className="rm-sub">Estimasi harga · 24 Mei 2026</div>
-                  <div className="rm-badge">▲ Potensi naik +3,0% dari harga saat ini</div>
+                  <div className="rm-label">Prediksi ({periodLabel})</div>
+
+                  {error ? (
+                    <>
+                      <div className="rm-price">Gagal memuat</div>
+                      <div className="rm-sub">{error}</div>
+                      <div className="rm-badge">Silakan coba lagi</div>
+                    </>
+                  ) : !result ? (
+                    <>
+                      <div className="rm-price">{loading ? 'Memproses…' : 'Belum ada hasil'}</div>
+                      <div className="rm-sub">Masukkan gram dan pilih periode, lalu klik “Dapatkan Prediksi”.</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="rm-price">
+                        {formatRupiah(result.predictedPrice)}
+                        <span className="rm-unit"> total</span>
+                      </div>
+                      <div className="rm-sub">Estimasi harga · {result.predictedDate}</div>
+                      <div className="rm-badge">
+                        {result.trend === 'UP' ? '▲' : '▼'} {formatPercent(result.percentageChange)} dari harga saat ini
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="result-row">
                   <div className="result-mini">
                     <div className="rmi-label">Nilai Portofolio Kini</div>
-                    <div className="rmi-val">Rp 27.000.000</div>
-                    <div className="rmi-sub">10 gram × Rp 2.700.000</div>
+                    <div className="rmi-val">{result ? formatRupiah(result.currentPrice) : '—'}</div>
+                    <div className="rmi-sub">{result ? `${gramOfGold} gram` : '—'}</div>
                   </div>
                   <div className="result-mini">
-                    <div className="rmi-label">Estimasi 7 Hari</div>
-                    <div className="rmi-val" style={{color:'#16a34a'}}>Rp 27.800.000</div>
-                    <div className="rmi-sub">Selisih +Rp 800.000</div>
+                    <div className="rmi-label">Estimasi</div>
+                    <div className="rmi-val" style={{color:'#16a34a'}}>{result ? formatRupiah(result.predictedPrice) : '—'}</div>
+                    <div className="rmi-sub">{result ? `Selisih ${formatRupiah(result.priceChange)}` : '—'}</div>
                   </div>
                 </div>
 
@@ -101,27 +164,34 @@ function Prediksi() {
                     <div className="rec-dot-wrap"><div className="rec-dot buy"></div></div>
                     <div className="rec-content">
                       <div className="rec-head">Pertimbangkan Beli</div>
-                      <div className="rec-body">Tren menunjukkan potensi kenaikan dalam 7 hari ke depan. Momentum positif dari data historis 30 hari terakhir mendukung posisi beli.</div>
+                      <div className="rec-body">{result ? result.recommendation : 'Rekomendasi akan muncul setelah prediksi berhasil.'}</div>
                     </div>
                   </div>
                   <div className="rec-item">
                     <div className="rec-dot-wrap"><div className="rec-dot hold"></div></div>
                     <div className="rec-content">
                       <div className="rec-head">Atau Tahan Posisi</div>
-                      <div className="rec-body">Jika sudah memiliki emas, tahan posisi dan pantau perkembangan lebih lanjut. Tidak ada sinyal kuat untuk exit saat ini.</div>
+                      <div className="rec-body">Anda bisa menyimpan prediksi ini dan membandingkan dengan pergerakan harga berikutnya.</div>
                     </div>
                   </div>
                   <div className="rec-item">
                     <div className="rec-dot-wrap"><div className="rec-dot sell"></div></div>
                     <div className="rec-content">
                       <div className="rec-head">Hindari Jual Sekarang</div>
-                      <div className="rec-body">Tidak disarankan menjual dalam jangka pendek berdasarkan pola pergerakan harga saat ini.</div>
+                      <div className="rec-body">Keputusan investasi tetap di tangan Anda. Gunakan prediksi sebagai insight tambahan.</div>
                     </div>
                   </div>
                   <div className="confidence">
                     <div className="conf-label">Tingkat Kepercayaan Model AI</div>
-                    <div className="conf-bar-track"><div className="conf-bar-fill" style={{width:'73%'}}></div></div>
-                    <div className="conf-pct">73% confidence</div>
+                    <div className="conf-bar-track">
+                      <div
+                        className="conf-bar-fill"
+                        style={{width: `${Math.round(((result?.confidence ?? 0) || 0) * 100)}%`}}
+                      ></div>
+                    </div>
+                    <div className="conf-pct">
+                      {result ? `${Math.round(result.confidence * 100)}% confidence` : '—'}
+                    </div>
                   </div>
                 </div>
               </div>

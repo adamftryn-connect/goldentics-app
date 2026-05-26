@@ -1,12 +1,57 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import FooterSimple from '../components/FooterSimple'
+import { getGoldHistory, getLatestGoldPrice } from '../api/goldenticsApi.js'
+import { formatRupiah } from '../utils/format.js'
 import './Grafik.css'
 
 const TABS = ['7 Hari', '1 Bulan', '3 Bulan', '1 Tahun']
 
 function Grafik() {
   const [activeTab, setActiveTab] = useState('7 Hari')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [history, setHistory] = useState([])
+  const [latest, setLatest] = useState(null)
+
+  const limitByTab = useMemo(() => {
+    if (activeTab === '7 Hari') return 7
+    if (activeTab === '1 Bulan') return 12
+    if (activeTab === '3 Bulan') return 16
+    return 24
+  }, [activeTab])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      setLoading(true)
+      setError(null)
+      try {
+        const [hist, latestPrice] = await Promise.all([
+          getGoldHistory({ period: 'monthly' }),
+          getLatestGoldPrice(),
+        ])
+
+        if (cancelled) return
+        const sliced = Array.isArray(hist) ? hist.slice(-limitByTab) : []
+        setHistory(sliced)
+        setLatest(latestPrice)
+      } catch (e) {
+        if (cancelled) return
+        setError(e?.message || 'Gagal memuat data histori')
+        setHistory([])
+        setLatest(null)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    load()
+    return () => {
+      cancelled = true
+    }
+  }, [activeTab, limitByTab])
 
   return (
     <>
@@ -21,7 +66,11 @@ function Grafik() {
       </div>
 
       <div className="stats-row">
-        <div className="sr-item"><div className="sr-lbl">Harga Hari Ini</div><div className="sr-val">Rp 2.700.000/gr</div><div className="sr-chg up">▲ +0,3% dari kemarin</div></div>
+        <div className="sr-item">
+          <div className="sr-lbl">Harga Hari Ini</div>
+          <div className="sr-val">{latest ? `${formatRupiah(latest.pricePerGram)}/gr` : '—'}</div>
+          <div className="sr-chg up">{loading ? 'memuat…' : error ? 'gagal memuat' : 'terbaru'}</div>
+        </div>
         <div className="sr-item"><div className="sr-lbl">Volume 24 Jam</div><div className="sr-val">426 lot</div><div className="sr-chg up">▲ naik</div></div>
         <div className="sr-item"><div className="sr-lbl">Tertinggi 7 Hari</div><div className="sr-val">Rp 2.850.000/gr</div><div className="sr-chg up">▲ +4,1% mingguan</div></div>
         <div className="sr-item"><div className="sr-lbl">Prediksi 7 Hari</div><div className="sr-val" style={{color:'#C9910A'}}>Rp 2.780.000/gr</div><div className="sr-chg amber">▲ Potensi naik</div></div>
@@ -123,20 +172,36 @@ function Grafik() {
               </tr>
             </thead>
             <tbody>
-              <tr><td className="date">07 Mei 2026</td><td>Rp 2.513.896</td><td>Rp 2.613.896</td><td>Rp 2.500.000</td><td>Rp 2.580.000</td><td className="down">▼ -0,3%</td></tr>
-              <tr><td className="date">06 Mei 2026</td><td>Rp 2.480.000</td><td>Rp 2.530.000</td><td>Rp 2.470.000</td><td>Rp 2.513.896</td><td className="up">▲ +0,1%</td></tr>
-              <tr><td className="date">05 Mei 2026</td><td>Rp 2.450.000</td><td>Rp 2.495.000</td><td>Rp 2.440.000</td><td>Rp 2.480.000</td><td className="up">▲ +0,4%</td></tr>
-              <tr><td className="date">04 Mei 2026</td><td>Rp 2.470.000</td><td>Rp 2.480.000</td><td>Rp 2.440.000</td><td>Rp 2.450.000</td><td className="down">▼ -0,5%</td></tr>
-              <tr><td className="date">03 Mei 2026</td><td>Rp 2.440.000</td><td>Rp 2.475.000</td><td>Rp 2.430.000</td><td>Rp 2.470.000</td><td className="up">▲ +0,2%</td></tr>
-              <tr><td className="date">02 Mei 2026</td><td>Rp 2.420.000</td><td>Rp 2.460.000</td><td>Rp 2.410.000</td><td>Rp 2.440.000</td><td className="up">▲ +0,6%</td></tr>
-              <tr><td className="date">01 Mei 2026</td><td>Rp 2.390.000</td><td>Rp 2.430.000</td><td>Rp 2.380.000</td><td>Rp 2.420.000</td><td className="up">▲ +0,3%</td></tr>
-              <tr><td className="date">30 Apr 2026</td><td>Rp 2.410.000</td><td>Rp 2.420.000</td><td>Rp 2.370.000</td><td>Rp 2.390.000</td><td className="down">▼ -0,2%</td></tr>
-              <tr><td className="date">29 Apr 2026</td><td>Rp 2.380.000</td><td>Rp 2.415.000</td><td>Rp 2.375.000</td><td>Rp 2.410.000</td><td className="up">▲ +0,7%</td></tr>
-              <tr><td className="date">28 Apr 2026</td><td>Rp 2.360.000</td><td>Rp 2.390.000</td><td>Rp 2.350.000</td><td>Rp 2.380.000</td><td className="up">▲ +0,4%</td></tr>
+              {loading ? (
+                <tr><td className="date" colSpan={6}>Memuat data…</td></tr>
+              ) : error ? (
+                <tr><td className="date" colSpan={6}>{error}</td></tr>
+              ) : history.length === 0 ? (
+                <tr><td className="date" colSpan={6}>Tidak ada data.</td></tr>
+              ) : (
+                history.map((row, idx) => {
+                  const open = row.openPrice ?? row.price
+                  const close = row.closePrice ?? row.price
+                  const change = open ? ((close - open) / open) * 100 : 0
+                  const isUp = change >= 0
+                  return (
+                    <tr key={`${row.date}-${idx}`}>
+                      <td className="date">{row.date}</td>
+                      <td>{formatRupiah(open)}</td>
+                      <td>{formatRupiah(row.highPrice ?? row.price)}</td>
+                      <td>{formatRupiah(row.lowPrice ?? row.price)}</td>
+                      <td>{formatRupiah(close)}</td>
+                      <td className={isUp ? 'up' : 'down'}>
+                        {isUp ? '▲' : '▼'} {Math.abs(change).toFixed(2)}%
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
             </tbody>
           </table>
           <div className="tbl-pagination">
-            <p>Menampilkan 1–10 dari 365 data</p>
+            <p>Menampilkan {history.length} data</p>
             <div className="pg-btns">
               <button className="pg-btn active">1</button>
               <button className="pg-btn">2</button>

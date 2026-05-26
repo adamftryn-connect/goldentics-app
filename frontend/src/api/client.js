@@ -1,7 +1,9 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: "/api",
+  // Dev: gunakan proxy Vite via "/api"
+  // Prod (mis. Vercel): set VITE_API_BASE_URL=https://<backend-public-url>/api
+  baseURL: import.meta.env.VITE_API_BASE_URL || "/api",
   headers: { "Content-Type": "application/json" },
   timeout: 20000,
 });

@@ -1,9 +1,27 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
+import { getLatestGoldPrice } from '../api/goldenticsApi.js'
+import { formatRupiah } from '../utils/format.js'
 import './Beranda.css'
 
 function Beranda() {
   const navigate = useNavigate()
+  const [latest, setLatest] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    getLatestGoldPrice()
+      .then((data) => {
+        if (!cancelled) setLatest(data)
+      })
+      .catch(() => {
+        if (!cancelled) setLatest(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <div className="page-beranda">
@@ -25,11 +43,11 @@ function Beranda() {
           <div className="hero-blob-deco"></div>
           <div className="ticker-card">
             <div className="ticker-lbl">Harga Emas Logam Mulia</div>
-            <div className="ticker-price">Rp 2.700.000</div>
+            <div className="ticker-price">{latest ? formatRupiah(latest.pricePerGram) : 'Rp 2.700.000'}</div>
             <div className="ticker-sub">per gram · diperbarui hari ini</div>
             <div className="ticker-badge">▲ +0,3% dari kemarin</div>
             <div className="t-rows">
-              <div className="t-row"><span className="t-lbl">1 gr</span><div className="t-track"><div className="t-fill" style={{width:'35%'}}></div></div><span className="t-val">Rp 2.700.000</span></div>
+              <div className="t-row"><span className="t-lbl">1 gr</span><div className="t-track"><div className="t-fill" style={{width:'35%'}}></div></div><span className="t-val">{latest ? formatRupiah(latest.pricePerGram) : 'Rp 2.700.000'}</span></div>
               <div className="t-row"><span className="t-lbl">5 gr</span><div className="t-track"><div className="t-fill" style={{width:'56%'}}></div></div><span className="t-val">Rp 13.500.000</span></div>
               <div className="t-row"><span className="t-lbl">10 gr</span><div className="t-track"><div className="t-fill" style={{width:'74%'}}></div></div><span className="t-val">Rp 27.000.000</span></div>
               <div className="t-row"><span className="t-lbl">25 gr</span><div className="t-track"><div className="t-fill" style={{width:'100%'}}></div></div><span className="t-val">Rp 67.500.000</span></div>
@@ -56,7 +74,7 @@ function Beranda() {
       <div className="stats-bar">
         <div className="sb-item">
           <div className="sb-lbl">Harga Hari Ini</div>
-          <div className="sb-val">Rp 2.700.000/gr</div>
+          <div className="sb-val">{latest ? `${formatRupiah(latest.pricePerGram)}/gr` : 'Rp 2.700.000/gr'}</div>
           <div className="sb-chg up">▲ +0,3% dari kemarin</div>
         </div>
         <div className="sb-item">
