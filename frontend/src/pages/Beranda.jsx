@@ -1,22 +1,39 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
+import StatsBar from '../components/StatsBar'
 import { getLatestGoldPrice } from '../api/goldenticsApi.js'
 import { formatRupiah } from '../utils/format.js'
+import iconRobot from '../../images/icon/ai-robot-icon.svg'
+import iconInflasi from '../../images/icon/inflasi.svg'
+import iconIndexDollar from '../../images/icon/index-dollar.svg'
+import iconGeopolitik from '../../images/icon/geopolitik.svg'
+import iconCentralBank from '../../images/icon/central-bank.svg'
+import iconPerhiasan from '../../images/icon/perhiasan.svg'
 import './Beranda.css'
 
 function Beranda() {
   const navigate = useNavigate()
   const [latest, setLatest] = useState(null)
+  const [latestLoading, setLatestLoading] = useState(true)
+  const [latestError, setLatestError] = useState(null)
 
   useEffect(() => {
     let cancelled = false
+    setLatestLoading(true)
+    setLatestError(null)
     getLatestGoldPrice()
       .then((data) => {
         if (!cancelled) setLatest(data)
       })
-      .catch(() => {
-        if (!cancelled) setLatest(null)
+      .catch((e) => {
+        if (!cancelled) {
+          setLatest(null)
+          setLatestError(e?.message || 'Gagal memuat')
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLatestLoading(false)
       })
     return () => {
       cancelled = true
@@ -29,8 +46,12 @@ function Beranda() {
 
       {/* HERO */}
       <section className="hero">
+        <div className="wrap2 hero-grid">
         <div className="hero-left">
-          <div className="hero-tag">🔮 Prediksi Cerdas Harga Emas</div>
+          <div className="hero-tag">
+            <img className="icon-img sm" src={iconRobot} alt="" aria-hidden="true" />
+            Prediksi Cerdas Harga Emas
+          </div>
           <h1>Analisis &amp; Prediksi<br />Harga Emas<br /><em>dengan AI.</em></h1>
           <p className="hero-desc">Dapatkan insight harga emas harian dengan teknologi AI dan data historis untuk keputusan investasi lebih cerdas.</p>
           <div className="hero-actions">
@@ -68,34 +89,14 @@ function Beranda() {
             </div>
           </div>
         </div>
+        </div>
       </section>
 
-      {/* STATS BAR */}
-      <div className="stats-bar">
-        <div className="sb-item">
-          <div className="sb-lbl">Harga Hari Ini</div>
-          <div className="sb-val">{latest ? `${formatRupiah(latest.pricePerGram)}/gr` : 'Rp 2.700.000/gr'}</div>
-          <div className="sb-chg up">▲ +0,3% dari kemarin</div>
-        </div>
-        <div className="sb-item">
-          <div className="sb-lbl">Volume 24 Jam</div>
-          <div className="sb-val">426 lot</div>
-          <div className="sb-chg up">▲ naik</div>
-        </div>
-        <div className="sb-item">
-          <div className="sb-lbl">Tertinggi 7 Hari</div>
-          <div className="sb-val">Rp 2.850.000/gr</div>
-          <div className="sb-chg up">▲ +4,1% mingguan</div>
-        </div>
-        <div className="sb-item">
-          <div className="sb-lbl">Prediksi 7 Hari</div>
-          <div className="sb-val" style={{color:'#C9910A'}}>Rp 2.780.000/gr</div>
-          <div className="sb-chg amber">▲ Potensi naik</div>
-        </div>
-      </div>
+      <StatsBar latest={latest} loading={latestLoading} error={latestError} />
 
       {/* SECTION 1 — Fondasi */}
       <section className="edu-section bg-white">
+        <div className="wrap2 edu-grid">
         <div>
           <div className="sec-eyebrow">01 — Fondasi</div>
           <h2 className="sec-title">Mengapa emas tetap relevan di era digital?</h2>
@@ -105,7 +106,6 @@ function Beranda() {
             <div className="sec-point"><span className="point-dot"></span>Diakui secara global tanpa bergantung pada sistem keuangan satu negara.</div>
             <div className="sec-point"><span className="point-dot"></span>Tidak terkorelasi langsung dengan pasar saham — cocok untuk diversifikasi.</div>
           </div>
-          <button className="sec-link">Pelajari lebih lanjut →</button>
         </div>
         <div>
           <div className="vis-gold">
@@ -136,10 +136,12 @@ function Beranda() {
             </div>
           </div>
         </div>
+        </div>
       </section>
 
       {/* SECTION 2 — Harga */}
       <section className="edu-section bg-cream alt">
+        <div className="wrap2 edu-grid">
         <div>
           <div className="sec-eyebrow">02 — Harga</div>
           <h2 className="sec-title">Apa yang menggerakkan harga emas?</h2>
@@ -149,23 +151,24 @@ function Beranda() {
             <div className="sec-point"><span className="point-dot"></span>Dolar AS melemah → harga emas dalam USD lebih terjangkau → permintaan naik.</div>
             <div className="sec-point"><span className="point-dot"></span>Ketidakpastian geopolitik mendorong permintaan safe haven secara masif.</div>
           </div>
-          <button className="sec-link">Lihat analisis faktor →</button>
         </div>
         <div>
           <div className="vis-factors">
             <div style={{fontSize:'.75rem',fontWeight:600,color:'#1a1a1a',marginBottom:'.1rem'}}>Pengaruh terhadap harga emas</div>
             <div style={{fontSize:'.65rem',color:'#aaa',marginBottom:'.75rem'}}>Estimasi korelasi historis</div>
-            <div className="factor-row"><div className="f-icon">📈</div><div className="f-txt"><div className="f-name">Inflasi AS (CPI)</div><div className="f-desc">Korelasi positif kuat</div></div><div className="f-bar-wrap"><div className="f-bar-track"><div className="f-bar-fill" style={{width:'88%'}}></div></div><div className="f-pct">88%</div></div></div>
-            <div className="factor-row"><div className="f-icon">💵</div><div className="f-txt"><div className="f-name">Indeks Dolar (DXY)</div><div className="f-desc">Korelasi negatif kuat</div></div><div className="f-bar-wrap"><div className="f-bar-track"><div className="f-bar-fill" style={{width:'80%'}}></div></div><div className="f-pct">-80%</div></div></div>
-            <div className="factor-row"><div className="f-icon">🌍</div><div className="f-txt"><div className="f-name">Risiko Geopolitik</div><div className="f-desc">Pengaruh jangka pendek</div></div><div className="f-bar-wrap"><div className="f-bar-track"><div className="f-bar-fill" style={{width:'72%'}}></div></div><div className="f-pct">72%</div></div></div>
-            <div className="factor-row"><div className="f-icon">🏦</div><div className="f-txt"><div className="f-name">Pembelian Bank Sentral</div><div className="f-desc">Permintaan institusional</div></div><div className="f-bar-wrap"><div className="f-bar-track"><div className="f-bar-fill" style={{width:'65%'}}></div></div><div className="f-pct">65%</div></div></div>
-            <div className="factor-row"><div className="f-icon">💎</div><div className="f-txt"><div className="f-name">Permintaan Perhiasan</div><div className="f-desc">Stagnan di jangka pendek</div></div><div className="f-bar-wrap"><div className="f-bar-track"><div className="f-bar-fill" style={{width:'40%'}}></div></div><div className="f-pct">40%</div></div></div>
+            <div className="factor-row"><div className="f-icon"><img className="icon-img" src={iconInflasi} alt="" aria-hidden="true" /></div><div className="f-txt"><div className="f-name">Inflasi AS (CPI)</div><div className="f-desc">Korelasi positif kuat</div></div><div className="f-bar-wrap"><div className="f-bar-track"><div className="f-bar-fill" style={{width:'88%'}}></div></div><div className="f-pct">88%</div></div></div>
+            <div className="factor-row"><div className="f-icon"><img className="icon-img" src={iconIndexDollar} alt="" aria-hidden="true" /></div><div className="f-txt"><div className="f-name">Indeks Dolar (DXY)</div><div className="f-desc">Korelasi negatif kuat</div></div><div className="f-bar-wrap"><div className="f-bar-track"><div className="f-bar-fill" style={{width:'80%'}}></div></div><div className="f-pct">-80%</div></div></div>
+            <div className="factor-row"><div className="f-icon"><img className="icon-img" src={iconGeopolitik} alt="" aria-hidden="true" /></div><div className="f-txt"><div className="f-name">Risiko Geopolitik</div><div className="f-desc">Pengaruh jangka pendek</div></div><div className="f-bar-wrap"><div className="f-bar-track"><div className="f-bar-fill" style={{width:'72%'}}></div></div><div className="f-pct">72%</div></div></div>
+            <div className="factor-row"><div className="f-icon"><img className="icon-img" src={iconCentralBank} alt="" aria-hidden="true" /></div><div className="f-txt"><div className="f-name">Pembelian Bank Sentral</div><div className="f-desc">Permintaan institusional</div></div><div className="f-bar-wrap"><div className="f-bar-track"><div className="f-bar-fill" style={{width:'65%'}}></div></div><div className="f-pct">65%</div></div></div>
+            <div className="factor-row"><div className="f-icon"><img className="icon-img" src={iconPerhiasan} alt="" aria-hidden="true" /></div><div className="f-txt"><div className="f-name">Permintaan Perhiasan</div><div className="f-desc">Stagnan di jangka pendek</div></div><div className="f-bar-wrap"><div className="f-bar-track"><div className="f-bar-fill" style={{width:'40%'}}></div></div><div className="f-pct">40%</div></div></div>
           </div>
+        </div>
         </div>
       </section>
 
       {/* SECTION 3 — Safe Haven */}
       <section className="edu-section bg-dark">
+        <div className="wrap2 edu-grid">
         <div>
           <div className="sec-eyebrow">03 — Strategi</div>
           <h2 className="sec-title">Safe haven: kenapa investor lari ke emas saat krisis?</h2>
@@ -197,10 +200,12 @@ function Beranda() {
             </div>
           </div>
         </div>
+        </div>
       </section>
 
       {/* SECTION 4 — Membaca Harga */}
       <section className="edu-section bg-white alt">
+        <div className="wrap2 edu-grid">
         <div>
           <div className="sec-eyebrow">04 — Membaca Data</div>
           <h2 className="sec-title">Cara membaca harga emas: troy ounce vs gram</h2>
@@ -229,13 +234,15 @@ function Beranda() {
               <div className="conv-arrow">↔</div>
               <div className="conv-side"><div className="conv-lbl">Antam Beli</div><div className="conv-val">Rp 1.612.000</div><div className="conv-unit">per gram</div></div>
             </div>
-            <div className="price-note">💡 Spread antara harga beli dan jual Antam sekitar Rp 118.000/gram (±6,8%). Ini biaya implisit yang perlu diperhitungkan sebelum investasi.</div>
+            <div className="price-note">Spread antara harga beli dan jual Antam sekitar Rp 118.000/gram (±6,8%). Ini biaya implisit yang perlu diperhitungkan sebelum investasi.</div>
           </div>
+        </div>
         </div>
       </section>
 
       {/* SECTION 5 — Tips Pemula */}
       <section className="edu-section bg-cream">
+        <div className="wrap2 edu-grid">
         <div>
           <div className="sec-eyebrow">05 — Pemula</div>
           <h2 className="sec-title">Mulai dari mana? Tips investasi emas pertama.</h2>
@@ -256,22 +263,26 @@ function Beranda() {
             <div className="tip-card"><div className="tip-num">05</div><div className="tip-text"><div className="tip-title">Gunakan alat analitik seperti Goldentics</div><div className="tip-desc">Data historis dan prediksi AI membantu keputusan lebih terstruktur.</div></div><div className="tip-check"></div></div>
           </div>
         </div>
+        </div>
       </section>
 
       {/* CTA STRIP */}
       <div className="cta-strip">
-        <div>
-          <h2>Siap menganalisis emas Anda?</h2>
-          <p>Gunakan prediksi AI atau kalkulator harga untuk mulai hari ini.</p>
-        </div>
-        <div className="cta-btns">
-          <button className="btn-outline" onClick={() => navigate('/kalkulator')}>Buka Kalkulator</button>
-          <button className="btn-primary" onClick={() => navigate('/prediksi')}>Coba Prediksi AI</button>
+        <div className="wrap2 cta-strip-inner">
+          <div>
+            <h2>Siap menganalisis emas Anda?</h2>
+            <p>Gunakan prediksi AI atau kalkulator harga untuk mulai hari ini.</p>
+          </div>
+          <div className="cta-btns">
+            <button className="btn-outline" onClick={() => navigate('/kalkulator')}>Buka Kalkulator</button>
+            <button className="btn-primary" onClick={() => navigate('/prediksi')}>Coba Prediksi AI</button>
+          </div>
         </div>
       </div>
 
       {/* FOOTER */}
       <footer className="footer">
+        <div className="wrap2">
         <div className="footer-top">
           <div>
             <div className="f-logo">Golden<span>tics</span></div>
@@ -292,6 +303,7 @@ function Beranda() {
             <a href="#">Kebijakan Privasi</a>
             <a href="#">Syarat &amp; Ketentuan</a>
           </div>
+        </div>
         </div>
       </footer>
     </div>

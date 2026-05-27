@@ -3,6 +3,7 @@ import Navbar from '../components/Navbar'
 import FooterSimple from '../components/FooterSimple'
 import { postPredict, PREDICTION_PERIOD_OPTIONS } from '../api/goldenticsApi.js'
 import { formatRupiah, formatPercent } from '../utils/format.js'
+import iconRobot from '../../images/icon/ai-robot-icon.svg'
 import './Prediksi.css'
 
 function Prediksi() {
@@ -42,9 +43,11 @@ function Prediksi() {
       <Navbar />
 
       <div className="page-hero">
-        <div className="eyebrow">Fitur Utama</div>
-        <h1>Prediksi Harga Emas AI</h1>
-        <p>Masukkan data emas Anda dan dapatkan prediksi harga serta rekomendasi beli/jual berbasis AI</p>
+        <div className="wrap2">
+          <div className="eyebrow">Fitur Utama</div>
+          <h1>Prediksi Harga Emas AI</h1>
+          <p>Masukkan data emas Anda dan dapatkan prediksi harga serta rekomendasi beli/jual berbasis AI</p>
+        </div>
       </div>
 
       <div className="main">
@@ -111,7 +114,9 @@ function Prediksi() {
           <div className="result-panel">
             {!showResult ? (
               <div className="empty-state">
-                <div className="empty-icon">🤖</div>
+                <div className="empty-icon">
+                  <img className="empty-icon-img" src={iconRobot} alt="" aria-hidden="true" />
+                </div>
                 <h3>Belum ada prediksi</h3>
                 <p>Isi form di sebelah kiri dan tekan "Dapatkan Prediksi" untuk melihat hasilnya di sini.</p>
               </div>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
+import StatsBar from '../components/StatsBar'
 import FooterSimple from '../components/FooterSimple'
 import { getGoldHistory, getLatestGoldPrice } from '../api/goldenticsApi.js'
 import { formatRupiah } from '../utils/format.js'
@@ -65,16 +66,7 @@ function Grafik() {
         </div>
       </div>
 
-      <div className="stats-row">
-        <div className="sr-item">
-          <div className="sr-lbl">Harga Hari Ini</div>
-          <div className="sr-val">{latest ? `${formatRupiah(latest.pricePerGram)}/gr` : '—'}</div>
-          <div className="sr-chg up">{loading ? 'memuat…' : error ? 'gagal memuat' : 'terbaru'}</div>
-        </div>
-        <div className="sr-item"><div className="sr-lbl">Volume 24 Jam</div><div className="sr-val">426 lot</div><div className="sr-chg up">▲ naik</div></div>
-        <div className="sr-item"><div className="sr-lbl">Tertinggi 7 Hari</div><div className="sr-val">Rp 2.850.000/gr</div><div className="sr-chg up">▲ +4,1% mingguan</div></div>
-        <div className="sr-item"><div className="sr-lbl">Prediksi 7 Hari</div><div className="sr-val" style={{color:'#C9910A'}}>Rp 2.780.000/gr</div><div className="sr-chg amber">▲ Potensi naik</div></div>
-      </div>
+      <StatsBar latest={latest} loading={loading} error={error} />
 
       <div className="main-grafik">
         <div className="main-grid">

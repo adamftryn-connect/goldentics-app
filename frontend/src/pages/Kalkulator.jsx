@@ -20,9 +20,11 @@ function Kalkulator() {
       <Navbar />
 
       <div className="page-hero">
-        <div className="eyebrow">Simulasi Harga</div>
-        <h1>Kalkulator Harga Emas</h1>
-        <p>Hitung nilai emas Anda dalam rupiah atau dolar secara instan berdasarkan harga pasar terkini</p>
+        <div className="wrap2">
+          <div className="eyebrow">Simulasi Harga</div>
+          <h1>Kalkulator Harga Emas</h1>
+          <p>Hitung nilai emas Anda dalam rupiah atau dolar secara instan berdasarkan harga pasar terkini</p>
+        </div>
       </div>
 
       <div className="main">

@@ -2,17 +2,19 @@
    PAGE 5: TENTANG
    ============================================= */
 .about-hero {
-  background: #fff;
-  border-bottom: 1px solid #eaeaea;
-  padding: 4rem 5% 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4rem;
-  align-items: end;
-  overflow: hidden;
+  padding-bottom: 0;
 }
 
-.ah-left { padding-bottom: 4rem; }
+.about-hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: end;
+}
+
+.ah-left {
+  padding-bottom: 3rem;
+}
 
 .ah-left h1 {
   font-size: clamp(2rem, 3.5vw, 3rem);
@@ -116,12 +118,6 @@
   text-align: right;
 }
 
-.section {
-  padding: 4rem 5%;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
 .section-title {
   font-size: 1.4rem;
   font-weight: 700;
@@ -163,7 +159,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
   margin-bottom: 1rem;
 }
 
@@ -217,9 +212,8 @@
   padding: 4rem 5%;
 }
 
-.dark-section .inner {
-  max-width: 1200px;
-  margin: 0 auto;
+.dark-section .section-sub {
+  color: #666;
 }
 
 .stack-grid {
@@ -247,7 +241,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
   flex-shrink: 0;
 }
 
@@ -284,7 +277,6 @@
   letter-spacing: 0.05em;
 }
 
-/* .about-info-rows: scoped agar tidak konflik dengan .info-rows di Kalkulator */
 .about-info-rows {
   display: flex;
   flex-direction: column;
@@ -311,3 +303,83 @@
 }
 
 .about-info-row a:hover { text-decoration: underline; }
+
+/* Footer — reuse Beranda footer styles via import in component; duplicate minimal for Tentang */
+.footer-about {
+  background: #1a1a1a;
+  padding: 2.5rem 5% 1.5rem;
+}
+
+.footer-about .footer-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.footer-about .f-logo {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #fff;
+}
+
+.footer-about .f-logo span { color: #C9910A; }
+
+.footer-about .f-desc {
+  font-size: 0.72rem;
+  color: #c7c7c7;
+  line-height: 1.7;
+  margin-top: 0.5rem;
+  max-width: 200px;
+}
+
+.footer-about .f-col h4 {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #f5f5f5;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.75rem;
+}
+
+.footer-about .f-col a {
+  display: block;
+  font-size: 0.75rem;
+  color: #b0b0b0;
+  text-decoration: none;
+  margin-bottom: 0.4rem;
+  transition: color 0.2s;
+}
+
+.footer-about .f-col a:hover { color: #C9910A; }
+
+.footer-about .footer-bottom {
+  border-top: 1px solid #222;
+  padding-top: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.footer-about .footer-bottom p {
+  font-size: 0.68rem;
+  color: #808080;
+}
+
+.footer-about .f-bottom-links {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.footer-about .f-bottom-links a {
+  font-size: 0.68rem;
+  color: #808080;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-about .f-bottom-links a:hover { color: #fff; }
+

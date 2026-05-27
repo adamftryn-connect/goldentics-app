@@ -124,7 +124,22 @@
   min-height: 400px;
 }
 
-.empty-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+.empty-icon {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FEF3DC;
+  border-radius: 16px;
+}
+
+.empty-icon-img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
 
 .empty-state h3 {
   font-size: 0.9rem;

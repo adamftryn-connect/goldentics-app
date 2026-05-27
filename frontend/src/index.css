@@ -9,11 +9,10 @@
 
 body {
   font-family: 'Poppins', sans-serif;
-  background: #F7F5F0;
+  background: #f7f5f0;
   color: #1a1a1a;
   -webkit-font-smoothing: antialiased;
 }
-
 
 /* =============================================
    NAVBAR
@@ -22,7 +21,7 @@ body {
   background: #fff;
   border-bottom: 1px solid #eaeaea;
   padding: 0 5%;
-  height: 64px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -32,15 +31,27 @@ body {
 }
 
 .nb-logo {
-  font-weight: 700;
-  font-size: 1.1rem;
-  letter-spacing: -0.025em;
-  color: #1a1a1a;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
 }
 
-.nb-logo span {
-  color: #C9910A;
+.nb-logo-img {
+  height: 32px;
+  width: auto;
+  display: block;
+}
+
+.icon-img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.icon-img.sm {
+  width: 16px;
+  height: 16px;
 }
 
 .nb-links {
@@ -61,7 +72,9 @@ body {
   text-decoration: none;
   display: inline-flex;
   align-items: center;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .nb-link:hover {
@@ -70,12 +83,12 @@ body {
 }
 
 .nb-link.active {
-  color: #C9910A;
+  color: #c9910a;
   font-weight: 600;
 }
 
 .nb-btn {
-  background: #C9910A;
+  background: #c9910a;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -91,9 +104,68 @@ body {
   background: #a87509;
 }
 
+/* =============================================
+   STATS BAR 
+   ============================================= */
+.stats-bar-section {
+  width: 100%;
+  background: #1a1a1a;
+  padding: 0 5%;
+}
+
+.stats-bar-section .stats-bar {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.stats-item {
+  padding: 1.25rem 2.5rem;
+  border-right: 1px solid #2e2e2e;
+}
+
+.stats-item:last-child {
+  border-right: none;
+}
+
+.stats-lbl {
+  font-size: 0.6rem;
+  color: #adadad;
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.02em;
+}
+
+.stats-val {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+}
+
+.stats-val.amber {
+  color: #c9910a;
+}
+
+.stats-chg {
+  font-size: 0.62rem;
+  margin-top: 0.2rem;
+  color: #555;
+}
+
+.stats-chg.up {
+  color: #4ade80;
+}
+
+.stats-chg.down {
+  color: #f87171;
+}
+
+.stats-chg.amber {
+  color: #c9910a;
+}
 
 /* =============================================
-   PAGE HERO — shared (Grafik, Kalkulator, Prediksi)
+   PAGE HERO 
    ============================================= */
 .page-hero {
   background: #fff;
@@ -101,15 +173,20 @@ body {
   padding: 3rem 5%;
 }
 
-.page-hero .wrap2 {
+.wrap2 {
   max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
+}
+
+.page-section {
+  padding: 4rem 5%;
 }
 
 .eyebrow {
   font-size: 0.65rem;
   font-weight: 700;
-  color: #C9910A;
+  color: #c9910a;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   margin-bottom: 0.5rem;
@@ -128,13 +205,12 @@ body {
   color: #888;
 }
 
-
 /* =============================================
    LAYOUT SHARED — Kalkulator & Prediksi
    ============================================= */
 .main {
   padding: 2.5rem 5% 4rem;
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
 }
 
@@ -176,11 +252,11 @@ body {
 
 .input-wrap input:focus,
 .input-wrap select:focus {
-  border-color: #C9910A;
+  border-color: #c9910a;
 }
 
 .unit {
-  background: #F7F5F0;
+  background: #f7f5f0;
   border: 1.5px solid #e5e5e5;
   border-left: none;
   border-radius: 0 9px 9px 0;
@@ -191,13 +267,15 @@ body {
   white-space: nowrap;
 }
 
-
 /* =============================================
    FOOTER SIMPLE — shared (Grafik, Kalkulator, Prediksi)
    ============================================= */
 .footer-simple {
   background: #1a1a1a;
   padding: 1.5rem 5%;
+}
+
+.footer-simple-inner {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -207,18 +285,54 @@ body {
 
 .footer-simple p {
   font-size: 0.7rem;
-  color: #444;
+  color: #808080;
 }
 
 .footer-simple a {
   font-size: 0.7rem;
-  color: #444;
+  color: #808080;
   text-decoration: none;
 }
 
-.footer-simple a:hover { color: #fff; }
+.footer-simple a:hover {
+  color: #fff;
+}
 
 .footer-simple-links {
   display: flex;
   gap: 1.25rem;
+}
+
+@media (max-width: 900px) {
+  .stats-bar-section .stats-bar {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .stats-item:nth-child(2) {
+    border-right: none;
+  }
+
+  .stats-item:nth-child(1),
+  .stats-item:nth-child(2) {
+    border-bottom: 1px solid #2e2e2e;
+  }
+
+  .hero-grid,
+  .about-hero-grid,
+  .edu-grid,
+  .main-grid,
+  .calc-grid,
+  .pred-grid,
+  .team-grid,
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-grid {
+    min-height: auto;
+  }
+
+  .edu-section.alt .edu-grid {
+    direction: ltr;
+  }
 }

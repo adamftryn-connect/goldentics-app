@@ -1,44 +1,10 @@
 /* =============================================
    PAGE 2: GRAFIK
    ============================================= */
-.stats-row {
-  background: #1a1a1a;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-}
-
-.sr-item {
-  padding: 1.25rem 2.5rem;
-  border-right: 1px solid #2e2e2e;
-}
-
-.sr-item:last-child { border-right: none; }
-
-.sr-lbl {
-  font-size: 0.6rem;
-  color: #555;
-  margin-bottom: 0.25rem;
-}
-
-.sr-val {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: -0.02em;
-}
-
-.sr-chg {
-  font-size: 0.62rem;
-  margin-top: 0.2rem;
-}
-
-.sr-chg.up    { color: #4ade80; }
-.sr-chg.down  { color: #f87171; }
-.sr-chg.amber { color: #C9910A; }
 
 /* .main-grafik: scoped agar tidak konflik dengan .main di Kalkulator/Prediksi */
 .main-grafik {
-  padding: 2.5rem 5%;
+  padding: 2.5rem 5% 4rem;
 }
 
 .main-grid {
@@ -47,6 +13,7 @@
   gap: 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
 }
 
 .chart-card {
@@ -251,8 +218,9 @@
 /* Table */
 .table-section {
   max-width: 1200px;
-  margin: 1.5rem auto 0;
+  margin: 0 auto;
   padding: 0 5% 3rem;
+  width: 100%;
 }
 
 .table-card {
