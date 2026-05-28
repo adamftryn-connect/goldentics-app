@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import StatsBar from '../components/StatsBar'
 import { getLatestGoldPrice } from '../api/goldenticsApi.js'
@@ -290,7 +290,10 @@ function Beranda() {
           </div>
           <div className="f-col">
             <h4>Navigasi</h4>
-            <a href="#">Beranda</a><a href="#">Grafik</a><a href="#">Kalkulator</a><a href="#">Prediksi</a>
+            <Link to="/">Beranda</Link>
+            <Link to="/grafik">Grafik</Link>
+            <Link to="/kalkulator">Kalkulator</Link>
+            <Link to="/prediksi">Prediksi</Link>
           </div>
           <div className="f-col">
             <h4>Tautan</h4>

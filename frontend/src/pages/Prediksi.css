@@ -105,6 +105,51 @@
 .disclaimer p      { font-size: 0.68rem; color: #888; line-height: 1.75; }
 .disclaimer strong { color: #555; }
 
+.pred-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pred-again-btn {
+  width: 100%;
+  background: none;
+  color: #1a1a1a;
+  border: 1.5px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+  background: #fff;
+}
+
+.pred-again-btn:hover {
+  border-color: #C9910A;
+  color: #C9910A;
+}
+
+.pred-again-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.pred-login-hint {
+  font-size: 0.72rem;
+  color: #888;
+  line-height: 1.6;
+}
+
+.pred-login-hint a {
+  color: #C9910A;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.pred-login-hint a:hover { text-decoration: underline; }
+
 .result-panel {
   display: flex;
   flex-direction: column;
@@ -324,4 +369,139 @@
   font-weight: 700;
   color: #C9910A;
   text-align: right;
+}
+
+/* Riwayat Prediksi (inline) */
+.history-card {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.history-hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #eaeaea;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.history-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.history-sub {
+  font-size: 0.72rem;
+  color: #888;
+  margin-top: 0.15rem;
+}
+
+.history-refresh {
+  background: #F7F5F0;
+  border: 1px solid #eaeaea;
+  border-radius: 9px;
+  padding: 9px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  color: #666;
+}
+
+.history-refresh:hover {
+  border-color: #C9910A;
+  color: #C9910A;
+}
+
+.history-refresh:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.history-error {
+  padding: 0.9rem 1.5rem;
+  font-size: 0.78rem;
+  color: #dc2626;
+}
+
+.history-table-wrap {
+  width: 100%;
+  overflow: auto;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-table thead tr {
+  background: #F7F5F0;
+  border-bottom: 2px solid #eaeaea;
+}
+
+.history-table thead th {
+  text-align: left;
+  padding: 0.85rem 1.5rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.history-table tbody tr {
+  border-bottom: 1px solid #f5f5f5;
+  transition: background 0.15s;
+}
+
+.history-table tbody tr:hover {
+  background: #fafafa;
+}
+
+.history-table tbody td {
+  padding: 0.9rem 1.5rem;
+  font-size: 0.8rem;
+  color: #1a1a1a;
+  white-space: nowrap;
+}
+
+.history-empty {
+  padding: 1.1rem 1.5rem;
+  color: #888;
+}
+
+.history-ft {
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #eaeaea;
+}
+
+.history-more {
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 9px;
+  padding: 9px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  color: #666;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.history-more:hover:not(:disabled) {
+  border-color: #C9910A;
+  color: #C9910A;
+}
+
+.history-more:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }

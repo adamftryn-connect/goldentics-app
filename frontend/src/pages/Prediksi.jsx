@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { NavLink } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import FooterSimple from '../components/FooterSimple'
-import { postPredict, PREDICTION_PERIOD_OPTIONS } from '../api/goldenticsApi.js'
+import { getPredictHistory, postPredict, PREDICTION_PERIOD_OPTIONS } from '../api/goldenticsApi.js'
 import { formatRupiah, formatPercent } from '../utils/format.js'
 import iconRobot from '../../images/icon/ai-robot-icon.svg'
 import './Prediksi.css'
@@ -13,11 +14,50 @@ function Prediksi() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [result, setResult] = useState(null)
+  const [hasToken, setHasToken] = useState(
+    Boolean(localStorage.getItem('goldentics_token'))
+  )
+
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyError, setHistoryError] = useState(null)
+  const [historyItems, setHistoryItems] = useState([])
+  const [historyOffset, setHistoryOffset] = useState(0)
+  const [historyHasMore, setHistoryHasMore] = useState(false)
 
   const periodLabel = useMemo(() => {
     const opt = PREDICTION_PERIOD_OPTIONS.find((o) => o.days === predictionDays)
     return opt?.label ?? `${predictionDays} Hari`
   }, [predictionDays])
+
+  useEffect(() => {
+    setHasToken(Boolean(localStorage.getItem('goldentics_token')))
+  }, [])
+
+  async function loadHistory({ reset = false } = {}) {
+    const token = localStorage.getItem('goldentics_token')
+    const ok = Boolean(token)
+    setHasToken(ok)
+    if (!ok) return
+
+    const limit = 10
+    const nextOffset = reset ? 0 : historyOffset
+    setHistoryLoading(true)
+    setHistoryError(null)
+    try {
+      const data = await getPredictHistory({ limit, offset: nextOffset })
+      const list = Array.isArray(data) ? data : []
+      const merged = reset ? list : [...historyItems, ...list]
+      setHistoryItems(merged)
+      setHistoryOffset(nextOffset + list.length)
+      setHistoryHasMore(list.length === limit)
+    } catch (e) {
+      setHistoryError(e?.message || 'Gagal memuat riwayat prediksi')
+      setHistoryItems(reset ? [] : historyItems)
+      setHistoryHasMore(false)
+    } finally {
+      setHistoryLoading(false)
+    }
+  }
 
   async function handlePredict() {
     setShowResult(true)
@@ -31,12 +71,30 @@ function Prediksi() {
         predictionDays: Number(predictionDays),
       })
       setResult(data)
+      // Jika login, backend menyimpan riwayat otomatis → refresh history
+      await loadHistory({ reset: true })
     } catch (e) {
       setError(e?.message || 'Gagal melakukan prediksi')
     } finally {
       setLoading(false)
     }
   }
+
+  function handlePredictAgain() {
+    setShowResult(false)
+    setError(null)
+    setResult(null)
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    // Load awal riwayat bila user sudah login
+    const token = localStorage.getItem('goldentics_token')
+    if (token) {
+      loadHistory({ reset: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <>
@@ -150,6 +208,23 @@ function Prediksi() {
                   )}
                 </div>
 
+                <div className="pred-actions">
+                  <button className="pred-again-btn" onClick={handlePredictAgain} disabled={loading}>
+                    Prediksi lagi
+                  </button>
+                  {!hasToken ? (
+                    <div className="pred-login-hint">
+                      Login/Register untuk menyimpan riwayat.
+                      {' '}
+                      <NavLink to="/login">Login</NavLink>
+                      {' '}
+                      ·
+                      {' '}
+                      <NavLink to="/register">Register</NavLink>
+                    </div>
+                  ) : null}
+                </div>
+
                 <div className="result-row">
                   <div className="result-mini">
                     <div className="rmi-label">Nilai Portofolio Kini</div>
@@ -204,6 +279,72 @@ function Prediksi() {
           </div>
         </div>
       </div>
+
+      {/* Riwayat Prediksi (inline) */}
+      {hasToken ? (
+        <div className="main" style={{ paddingTop: 0 }}>
+          <div className="history-card">
+            <div className="history-hd">
+              <div>
+                <div className="history-title">Riwayat Prediksi</div>
+                <div className="history-sub">
+                  {historyLoading ? 'memuat…' : historyError ? 'gagal memuat' : `${historyItems.length} item`}
+                </div>
+              </div>
+              <button
+                className="history-refresh"
+                onClick={() => loadHistory({ reset: true })}
+                disabled={historyLoading}
+              >
+                Refresh
+              </button>
+            </div>
+
+            {historyError ? <div className="history-error">{historyError}</div> : null}
+
+            <div className="history-table-wrap">
+              <table className="history-table">
+                <thead>
+                  <tr>
+                    <th>Tanggal</th>
+                    <th>Gram</th>
+                    <th>Prediksi</th>
+                    <th>Trend</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {historyLoading && historyItems.length === 0 ? (
+                    <tr><td colSpan={4} className="history-empty">Memuat data…</td></tr>
+                  ) : historyItems.length === 0 ? (
+                    <tr><td colSpan={4} className="history-empty">Belum ada riwayat.</td></tr>
+                  ) : (
+                    historyItems.map((row) => (
+                      <tr key={row.id}>
+                        <td className="date">{new Date(row.createdAt).toLocaleString('id-ID')}</td>
+                        <td>{row.gramOfGold} gr</td>
+                        <td>{formatRupiah(row.predictedPrice)}</td>
+                        <td className={row.trend === 'UP' ? 'up' : 'down'}>
+                          {row.trend === 'UP' ? '▲ Naik' : '▼ Turun'}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="history-ft">
+              <button
+                className="history-more"
+                onClick={() => loadHistory({ reset: false })}
+                disabled={historyLoading || !historyHasMore}
+              >
+                {historyLoading ? 'Memuat…' : historyHasMore ? 'Muat lebih banyak' : 'Tidak ada lagi'}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <FooterSimple />
     </>

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import iconUser from '../../images/icon/user.svg'
 import iconReact from '../../images/icon/react.svg'
@@ -161,7 +162,10 @@ function Tentang() {
             </div>
             <div className="f-col">
               <h4>Navigasi</h4>
-              <a href="#">Beranda</a><a href="#">Grafik</a><a href="#">Kalkulator</a><a href="#">Prediksi</a>
+            <Link to="/">Beranda</Link>
+            <Link to="/grafik">Grafik</Link>
+            <Link to="/kalkulator">Kalkulator</Link>
+            <Link to="/prediksi">Prediksi</Link>
             </div>
             <div className="f-col">
               <h4>Tautan</h4>

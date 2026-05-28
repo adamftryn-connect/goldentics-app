@@ -14,6 +14,19 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Page shell: push footer to bottom */
+.page-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-shell-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
 /* =============================================
    NAVBAR
    ============================================= */
@@ -102,6 +115,60 @@ body {
 
 .nb-btn:hover {
   background: #a87509;
+}
+
+.nb-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nb-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 999px;
+  padding: 6px 12px 6px 8px;
+  max-width: 240px;
+}
+
+.nb-user-pic {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: contain;
+  flex-shrink: 0;
+  background: #F7F5F0;
+  border: 1px solid #eaeaea;
+}
+
+.nb-user-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nb-btn-secondary {
+  background: none;
+  color: #1a1a1a;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.nb-btn-secondary:hover {
+  border-color: #c9910a;
+  color: #c9910a;
 }
 
 /* =============================================
