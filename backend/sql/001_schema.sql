@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS gold_prices (
   low_price BIGINT,
   close_price BIGINT,
   source VARCHAR(50) DEFAULT 'logammulia',
+  volume INTEGER,
+  daily_return NUMERIC(12, 8),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

@@ -2,11 +2,21 @@ import { useEffect, useMemo, useState } from 'react'
 import Navbar from '../components/Navbar'
 import StatsBar from '../components/StatsBar'
 import FooterSimple from '../components/FooterSimple'
-import { getGoldHistory, getLatestGoldPrice } from '../api/goldenticsApi.js'
-import { formatRupiah } from '../utils/format.js'
+import {
+  getGoldHistory,
+  getLatestGoldPrice,
+  getGoldStatsSummary,
+  GRAFIK_TAB_LIMITS,
+} from '../api/goldenticsApi.js'
+import { formatRupiah, formatPercent } from '../utils/format.js'
+import {
+  buildGoldLineChart,
+  computePeriodSummary,
+  formatGoldDateId,
+} from '../utils/goldChart.js'
 import './Grafik.css'
 
-const TABS = ['7 Hari', '1 Bulan', '3 Bulan', '1 Tahun']
+const TABS = Object.keys(GRAFIK_TAB_LIMITS)
 
 function Grafik() {
   const [activeTab, setActiveTab] = useState('7 Hari')
@@ -14,13 +24,23 @@ function Grafik() {
   const [error, setError] = useState(null)
   const [history, setHistory] = useState([])
   const [latest, setLatest] = useState(null)
+  const [summary, setSummary] = useState(null)
 
-  const limitByTab = useMemo(() => {
-    if (activeTab === '7 Hari') return 7
-    if (activeTab === '1 Bulan') return 12
-    if (activeTab === '3 Bulan') return 16
-    return 24
-  }, [activeTab])
+  const limitByTab = GRAFIK_TAB_LIMITS[activeTab] ?? 7
+
+  const chart = useMemo(() => buildGoldLineChart(history), [history])
+  const periodSummary = useMemo(() => computePeriodSummary(history), [history])
+
+  const lastUpdatedLabel = latest?.date ? formatGoldDateId(latest.date) : null
+
+  const latestDailyChange =
+    latest?.dailyReturn != null
+      ? formatPercent(latest.dailyReturn * 100)
+      : summary?.dailyReturnPct != null
+        ? formatPercent(summary.dailyReturnPct)
+        : null
+  const latestChangeUp =
+    (latest?.dailyReturn ?? summary?.dailyReturnPct ?? 0) >= 0
 
   useEffect(() => {
     let cancelled = false
@@ -29,20 +49,22 @@ function Grafik() {
       setLoading(true)
       setError(null)
       try {
-        const [hist, latestPrice] = await Promise.all([
-          getGoldHistory({ period: 'monthly' }),
+        const [hist, latestPrice, stats] = await Promise.all([
+          getGoldHistory({ period: 'daily', limit: limitByTab }),
           getLatestGoldPrice(),
+          getGoldStatsSummary(7),
         ])
 
         if (cancelled) return
-        const sliced = Array.isArray(hist) ? hist.slice(-limitByTab) : []
-        setHistory(sliced)
+        setHistory(Array.isArray(hist) ? hist : [])
         setLatest(latestPrice)
+        setSummary(stats)
       } catch (e) {
         if (cancelled) return
         setError(e?.message || 'Gagal memuat data histori')
         setHistory([])
         setLatest(null)
+        setSummary(null)
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -54,19 +76,30 @@ function Grafik() {
     }
   }, [activeTab, limitByTab])
 
+  const gramMultipliers = [5, 10, 25, 50]
+  const pricePerGram = latest?.pricePerGram ?? latest?.price ?? 0
+
   return (
     <>
       <Navbar />
 
       <div className="page-hero">
         <div className="wrap2">
-          <div className="eyebrow">Data Real-time</div>
+          <div className="eyebrow">Data Historis</div>
           <h1>Grafik &amp; Histori Harga Emas</h1>
-          <p>Pantau pergerakan harga emas secara real-time dan analisis data historis</p>
+          <p>
+            Pantau pergerakan harga emas berdasarkan data historis harian
+            {lastUpdatedLabel ? ` · Terakhir: ${lastUpdatedLabel}` : ''}
+          </p>
         </div>
       </div>
 
-      <StatsBar latest={latest} loading={loading} error={error} />
+      <StatsBar
+        latest={latest}
+        summary={summary}
+        loading={loading}
+        error={error}
+      />
 
       <div className="main-grafik">
         <div className="main-grid">
@@ -74,44 +107,96 @@ function Grafik() {
             <div className="chart-header">
               <div>
                 <div className="chart-title">Grafik Harga Emas</div>
-                <div className="chart-sub">Pantau pergerakan harga secara real-time</div>
+                <div className="chart-sub">
+                  Harga penutupan (close) per hari · {activeTab}
+                </div>
               </div>
               <div className="filter-tabs">
-                {TABS.map(t => (
-                  <button key={t} className={'tab' + (activeTab === t ? ' active' : '')} onClick={() => setActiveTab(t)}>{t}</button>
+                {TABS.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    className={'tab' + (activeTab === t ? ' active' : '')}
+                    onClick={() => setActiveTab(t)}
+                  >
+                    {t}
+                  </button>
                 ))}
               </div>
             </div>
             <div className="chart-wrap">
-              <div className="chart-tooltip">Rp 2.780.000</div>
-              <svg viewBox="0 0 860 240" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#C9910A" stopOpacity=".18"/>
-                    <stop offset="100%" stopColor="#C9910A" stopOpacity="0"/>
-                  </linearGradient>
-                </defs>
-                <line x1="40" y1="20" x2="860" y2="20" stroke="#f0f0f0" strokeWidth="1"/>
-                <line x1="40" y1="70" x2="860" y2="70" stroke="#f0f0f0" strokeWidth="1"/>
-                <line x1="40" y1="120" x2="860" y2="120" stroke="#f0f0f0" strokeWidth="1"/>
-                <line x1="40" y1="170" x2="860" y2="170" stroke="#f0f0f0" strokeWidth="1"/>
-                <text x="0" y="24" fontSize="9" fill="#bbb" fontFamily="Poppins,sans-serif">2.900</text>
-                <text x="0" y="74" fontSize="9" fill="#bbb" fontFamily="Poppins,sans-serif">2.800</text>
-                <text x="0" y="124" fontSize="9" fill="#bbb" fontFamily="Poppins,sans-serif">2.700</text>
-                <text x="0" y="174" fontSize="9" fill="#bbb" fontFamily="Poppins,sans-serif">2.600</text>
-                <path d="M40,155 C130,148 210,130 310,110 S430,130 530,95 S660,55 760,65 S830,70 860,55 L860,220 L40,220 Z" fill="url(#g1)"/>
-                <path d="M40,155 C130,148 210,130 310,110 S430,130 530,95 S660,55 760,65 S830,70 860,55" fill="none" stroke="#C9910A" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="310" cy="110" r="4" fill="#C9910A"/>
-                <circle cx="530" cy="95" r="4" fill="#C9910A"/>
-                <circle cx="860" cy="55" r="5" fill="#C9910A" stroke="#fff" strokeWidth="2"/>
-                <text x="36" y="235" fontSize="9" fill="#bbb" fontFamily="Poppins,sans-serif" textAnchor="middle">01 Mei</text>
-                <text x="168" y="235" fontSize="9" fill="#bbb" fontFamily="Poppins,sans-serif" textAnchor="middle">03 Mei</text>
-                <text x="310" y="235" fontSize="9" fill="#bbb" fontFamily="Poppins,sans-serif" textAnchor="middle">05 Mei</text>
-                <text x="530" y="235" fontSize="9" fill="#bbb" fontFamily="Poppins,sans-serif" textAnchor="middle">07 Mei</text>
-                <text x="700" y="235" fontSize="9" fill="#bbb" fontFamily="Poppins,sans-serif" textAnchor="middle">09 Mei</text>
-                <text x="856" y="235" fontSize="9" fill="#bbb" fontFamily="Poppins,sans-serif" textAnchor="middle">Hari ini</text>
-                <line x1="860" y1="20" x2="860" y2="220" stroke="#C9910A" strokeWidth="1" strokeDasharray="4,3" opacity=".5"/>
-              </svg>
+              {loading ? (
+                <div className="chart-empty">Memuat grafik…</div>
+              ) : error ? (
+                <div className="chart-empty">{error}</div>
+              ) : !chart ? (
+                <div className="chart-empty">Tidak ada data untuk ditampilkan.</div>
+              ) : (
+                <>
+                  <div className="chart-tooltip">
+                    {formatRupiah(chart.lastPoint.price)}
+                  </div>
+                  <svg viewBox={`0 0 ${chart.width} ${chart.height}`} preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#C9910A" stopOpacity=".18" />
+                        <stop offset="100%" stopColor="#C9910A" stopOpacity="0" />
+                      </linearGradient>
+                    </defs>
+                    {chart.yTicks.map((tick) => (
+                      <g key={tick.label}>
+                        <line
+                          x1={chart.padLeft}
+                          y1={tick.y}
+                          x2={chart.width - chart.padRight}
+                          y2={tick.y}
+                          stroke="#f0f0f0"
+                          strokeWidth="1"
+                        />
+                        <text
+                          x="0"
+                          y={tick.y + 3}
+                          fontSize="9"
+                          fill="#bbb"
+                          fontFamily="Poppins,sans-serif"
+                        >
+                          {tick.label}
+                        </text>
+                      </g>
+                    ))}
+                    <path d={chart.areaD} fill="url(#g1)" />
+                    <path
+                      d={chart.lineD}
+                      fill="none"
+                      stroke="#C9910A"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <circle
+                      cx={chart.lastPoint.x}
+                      cy={chart.lastPoint.y}
+                      r="5"
+                      fill="#C9910A"
+                      stroke="#fff"
+                      strokeWidth="2"
+                    />
+                    {chart.xLabels.map((lbl) => (
+                      <text
+                        key={lbl.label}
+                        x={lbl.x}
+                        y={chart.height - 4}
+                        fontSize="9"
+                        fill="#bbb"
+                        fontFamily="Poppins,sans-serif"
+                        textAnchor="middle"
+                      >
+                        {lbl.label}
+                      </text>
+                    ))}
+                  </svg>
+                </>
+              )}
             </div>
           </div>
 
@@ -120,25 +205,64 @@ function Grafik() {
               <h3>Harga Saat Ini</h3>
               <div className="price-now">
                 <div className="price-now-lbl">Logam Mulia Antam</div>
-                <div className="price-now-val">Rp 2.700.000</div>
-                <div className="price-badge">▲ +0,3% hari ini</div>
+                <div className="price-now-val">
+                  {latest ? formatRupiah(pricePerGram) : '—'}
+                </div>
+                {latestDailyChange ? (
+                  <div className={`price-badge ${latestChangeUp ? '' : 'down'}`}>
+                    {latestChangeUp ? '▲' : '▼'} {latestDailyChange} hari terakhir
+                  </div>
+                ) : null}
               </div>
               <div className="price-rows">
-                <div className="price-row"><span className="price-row-lbl">5 gram</span><span className="price-row-val">Rp 13.500.000</span></div>
-                <div className="price-row"><span className="price-row-lbl">10 gram</span><span className="price-row-val">Rp 27.000.000</span></div>
-                <div className="price-row"><span className="price-row-lbl">25 gram</span><span className="price-row-val">Rp 67.500.000</span></div>
-                <div className="price-row"><span className="price-row-lbl">50 gram</span><span className="price-row-val">Rp 135.000.000</span></div>
+                {gramMultipliers.map((g) => (
+                  <div key={g} className="price-row">
+                    <span className="price-row-lbl">{g} gram</span>
+                    <span className="price-row-val">
+                      {latest ? formatRupiah(pricePerGram * g) : '—'}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
             <div className="side-card">
               <h3>Ringkasan Periode</h3>
               <div className="summary-rows">
-                <div className="sum-row"><span className="sum-lbl">Pembukaan</span><span className="sum-val">Rp 2.640.000</span></div>
-                <div className="sum-row"><span className="sum-lbl">Tertinggi</span><span className="sum-val up">Rp 2.850.000</span></div>
-                <div className="sum-row"><span className="sum-lbl">Terendah</span><span className="sum-val down">Rp 2.600.000</span></div>
-                <div className="sum-row"><span className="sum-lbl">Penutupan</span><span className="sum-val">Rp 2.700.000</span></div>
-                <div className="sum-row"><span className="sum-lbl">Perubahan</span><span className="sum-val up">+Rp 60.000 (+2,3%)</span></div>
-                <div className="sum-row"><span className="sum-lbl">Prediksi</span><span className="sum-val amber">Rp 2.780.000</span></div>
+                {!periodSummary ? (
+                  <div className="sum-row">
+                    <span className="sum-lbl">—</span>
+                    <span className="sum-val">Belum ada data</span>
+                  </div>
+                ) : (
+                  <>
+                    <div className="sum-row">
+                      <span className="sum-lbl">Pembukaan</span>
+                      <span className="sum-val">{formatRupiah(periodSummary.open)}</span>
+                    </div>
+                    <div className="sum-row">
+                      <span className="sum-lbl">Tertinggi</span>
+                      <span className="sum-val up">{formatRupiah(periodSummary.high)}</span>
+                    </div>
+                    <div className="sum-row">
+                      <span className="sum-lbl">Terendah</span>
+                      <span className="sum-val down">{formatRupiah(periodSummary.low)}</span>
+                    </div>
+                    <div className="sum-row">
+                      <span className="sum-lbl">Penutupan</span>
+                      <span className="sum-val">{formatRupiah(periodSummary.close)}</span>
+                    </div>
+                    <div className="sum-row">
+                      <span className="sum-lbl">Perubahan</span>
+                      <span
+                        className={`sum-val ${periodSummary.change >= 0 ? 'up' : 'down'}`}
+                      >
+                        {periodSummary.change >= 0 ? '+' : ''}
+                        {formatRupiah(periodSummary.change)} (
+                        {formatPercent(periodSummary.changePct)})
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -150,32 +274,51 @@ function Grafik() {
           <div className="table-hd">
             <div>
               <h3>Histori Harga Emas</h3>
-              <p>Data historis harga emas Logam Mulia</p>
-            </div>
-            <div className="search-bar">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#bbb" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input type="text" placeholder="Cari tanggal..." />
+              <p>Data historis harian · {activeTab}</p>
             </div>
           </div>
           <table className="tbl">
             <thead>
               <tr>
-                <th>Tanggal</th><th>Harga Open</th><th>Tertinggi</th><th>Terendah</th><th>Harga Tutup</th><th>Perubahan</th>
+                <th>Tanggal</th>
+                <th>Harga Open</th>
+                <th>Tertinggi</th>
+                <th>Terendah</th>
+                <th>Harga Tutup</th>
+                <th>Volume</th>
+                <th>Perubahan</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td className="date" colSpan={6}>Memuat data…</td></tr>
+                <tr>
+                  <td className="date" colSpan={7}>
+                    Memuat data…
+                  </td>
+                </tr>
               ) : error ? (
-                <tr><td className="date" colSpan={6}>{error}</td></tr>
+                <tr>
+                  <td className="date" colSpan={7}>
+                    {error}
+                  </td>
+                </tr>
               ) : history.length === 0 ? (
-                <tr><td className="date" colSpan={6}>Tidak ada data.</td></tr>
+                <tr>
+                  <td className="date" colSpan={7}>
+                    Tidak ada data.
+                  </td>
+                </tr>
               ) : (
-                history.map((row, idx) => {
+                [...history].reverse().map((row, idx) => {
                   const open = row.openPrice ?? row.price
                   const close = row.closePrice ?? row.price
-                  const change = open ? ((close - open) / open) * 100 : 0
-                  const isUp = change >= 0
+                  const pct =
+                    row.dailyReturn != null
+                      ? row.dailyReturn * 100
+                      : open
+                        ? ((close - open) / open) * 100
+                        : 0
+                  const isUp = pct >= 0
                   return (
                     <tr key={`${row.date}-${idx}`}>
                       <td className="date">{row.date}</td>
@@ -183,8 +326,13 @@ function Grafik() {
                       <td>{formatRupiah(row.highPrice ?? row.price)}</td>
                       <td>{formatRupiah(row.lowPrice ?? row.price)}</td>
                       <td>{formatRupiah(close)}</td>
+                      <td>
+                        {row.volume != null
+                          ? row.volume.toLocaleString('id-ID')
+                          : '—'}
+                      </td>
                       <td className={isUp ? 'up' : 'down'}>
-                        {isUp ? '▲' : '▼'} {Math.abs(change).toFixed(2)}%
+                        {isUp ? '▲' : '▼'} {Math.abs(pct).toFixed(2)}%
                       </td>
                     </tr>
                   )
@@ -194,13 +342,6 @@ function Grafik() {
           </table>
           <div className="tbl-pagination">
             <p>Menampilkan {history.length} data</p>
-            <div className="pg-btns">
-              <button className="pg-btn active">1</button>
-              <button className="pg-btn">2</button>
-              <button className="pg-btn">3</button>
-              <button className="pg-btn">...</button>
-              <button className="pg-btn">37</button>
-            </div>
           </div>
         </div>
       </div>

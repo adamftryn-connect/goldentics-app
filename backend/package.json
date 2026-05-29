@@ -11,7 +11,8 @@
     "dev": "node --watch src/index.js",
     "db:migrate": "node scripts/migrate.js",
     "db:seed": "node scripts/seed.js",
-    "db:setup": "npm run db:migrate && npm run db:seed",
+    "db:import-gold": "node scripts/import-gold-csv.js",
+    "db:setup": "npm run db:migrate && npm run db:import-gold",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

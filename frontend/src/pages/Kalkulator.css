@@ -132,6 +132,10 @@
   line-height: 1.6;
 }
 
+.calc-ref-note {
+  margin-top: 1rem;
+}
+
 .ref-card {
   background: #fff;
   border: 1px solid #eaeaea;

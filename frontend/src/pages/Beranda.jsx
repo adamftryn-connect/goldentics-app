@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import StatsBar from '../components/StatsBar'
-import { getLatestGoldPrice } from '../api/goldenticsApi.js'
-import { formatRupiah } from '../utils/format.js'
+import { getLatestGoldPrice, getGoldStatsSummary } from '../api/goldenticsApi.js'
 import iconRobot from '../../images/icon/ai-robot-icon.svg'
+import heroRight from '../../images/hero-right.svg'
 import iconInflasi from '../../images/icon/inflasi.svg'
 import iconIndexDollar from '../../images/icon/index-dollar.svg'
 import iconGeopolitik from '../../images/icon/geopolitik.svg'
@@ -15,6 +15,7 @@ import './Beranda.css'
 function Beranda() {
   const navigate = useNavigate()
   const [latest, setLatest] = useState(null)
+  const [summary, setSummary] = useState(null)
   const [latestLoading, setLatestLoading] = useState(true)
   const [latestError, setLatestError] = useState(null)
 
@@ -22,13 +23,17 @@ function Beranda() {
     let cancelled = false
     setLatestLoading(true)
     setLatestError(null)
-    getLatestGoldPrice()
-      .then((data) => {
-        if (!cancelled) setLatest(data)
+    Promise.all([getLatestGoldPrice(), getGoldStatsSummary(7)])
+      .then(([latestData, summaryData]) => {
+        if (!cancelled) {
+          setLatest(latestData)
+          setSummary(summaryData)
+        }
       })
       .catch((e) => {
         if (!cancelled) {
           setLatest(null)
+          setSummary(null)
           setLatestError(e?.message || 'Gagal memuat')
         }
       })
@@ -60,39 +65,26 @@ function Beranda() {
           </div>
         </div>
 
-        <div className="hero-right">
-          <div className="hero-blob-deco"></div>
-          <div className="ticker-card">
-            <div className="ticker-lbl">Harga Emas Logam Mulia</div>
-            <div className="ticker-price">{latest ? formatRupiah(latest.pricePerGram) : 'Rp 2.700.000'}</div>
-            <div className="ticker-sub">per gram · diperbarui hari ini</div>
-            <div className="ticker-badge">▲ +0,3% dari kemarin</div>
-            <div className="t-rows">
-              <div className="t-row"><span className="t-lbl">1 gr</span><div className="t-track"><div className="t-fill" style={{width:'35%'}}></div></div><span className="t-val">{latest ? formatRupiah(latest.pricePerGram) : 'Rp 2.700.000'}</span></div>
-              <div className="t-row"><span className="t-lbl">5 gr</span><div className="t-track"><div className="t-fill" style={{width:'56%'}}></div></div><span className="t-val">Rp 13.500.000</span></div>
-              <div className="t-row"><span className="t-lbl">10 gr</span><div className="t-track"><div className="t-fill" style={{width:'74%'}}></div></div><span className="t-val">Rp 27.000.000</span></div>
-              <div className="t-row"><span className="t-lbl">25 gr</span><div className="t-track"><div className="t-fill" style={{width:'100%'}}></div></div><span className="t-val">Rp 67.500.000</span></div>
-            </div>
-          </div>
-          <div className="mini-stats">
-            <div className="ms-item">
-              <div className="ms-val gold">Rp 2.850.000</div>
-              <div className="ms-lbl">Tertinggi 7 hari</div>
-            </div>
-            <div className="ms-item">
-              <div className="ms-val">426 lot</div>
-              <div className="ms-lbl">Volume 24j</div>
-            </div>
-            <div className="ms-item">
-              <div className="ms-val green">+3,0%</div>
-              <div className="ms-lbl">Prediksi 7 hari</div>
-            </div>
-          </div>
+        <div className="hero-right beranda-visual">
+          <img
+            className="hero-right-img"
+            src={heroRight}
+            alt="Ilustrasi emas dan analisis harga"
+            width={1035}
+            height={1035}
+            loading="lazy"
+            decoding="async"
+          />
         </div>
         </div>
       </section>
 
-      <StatsBar latest={latest} loading={latestLoading} error={latestError} />
+      <StatsBar
+        latest={latest}
+        summary={summary}
+        loading={latestLoading}
+        error={latestError}
+      />
 
       {/* SECTION 1 — Fondasi */}
       <section className="edu-section bg-white">
@@ -108,7 +100,7 @@ function Beranda() {
           </div>
         </div>
         <div>
-          <div className="vis-gold">
+          <div className="vis-gold beranda-visual">
             <svg width="240" height="200" viewBox="0 0 240 200" fill="none">
               <ellipse cx="120" cy="192" rx="80" ry="7" fill="rgba(0,0,0,.08)"/>
               <g transform="translate(55,50)">

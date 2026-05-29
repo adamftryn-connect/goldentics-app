@@ -3,10 +3,13 @@ import {
   isDatabaseAvailable,
   findAllGoldPrices,
   findLatestGoldPrice,
+  findRecentGoldPrices,
+  findGoldPricesInRange,
+  findGoldStatsLastNDays,
 } from "../repositories/goldPrice.repository.js";
 
 function parseDate(value) {
-  const date = new Date(value);
+  const date = new Date(`${String(value).slice(0, 10)}T12:00:00`);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
@@ -21,6 +24,8 @@ function toPublicRecord(entry) {
   if (entry.highPrice != null) record.highPrice = entry.highPrice;
   if (entry.lowPrice != null) record.lowPrice = entry.lowPrice;
   if (entry.closePrice != null) record.closePrice = entry.closePrice;
+  if (entry.volume != null) record.volume = entry.volume;
+  if (entry.dailyReturn != null) record.dailyReturn = entry.dailyReturn;
 
   return record;
 }
@@ -40,9 +45,33 @@ function getLatestEntryFromList(entries) {
   return sorted[0] ?? null;
 }
 
-export async function getGoldHistory({ period = "monthly", startDate, endDate } = {}) {
-  if (period !== "monthly" && period !== "yearly") {
-    const err = new Error('period harus "monthly" atau "yearly"');
+function aggregateMonthly(entries) {
+  const byMonth = new Map();
+  for (const item of entries) {
+    const key = item.date.slice(0, 7);
+    byMonth.set(key, item);
+  }
+  return [...byMonth.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function aggregateYearly(entries) {
+  const byYear = new Map();
+  for (const item of entries) {
+    const year = item.date.slice(0, 4);
+    byYear.set(year, item);
+  }
+  return [...byYear.values()].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export async function getGoldHistory({
+  period = "daily",
+  startDate,
+  endDate,
+  limit,
+} = {}) {
+  const allowed = ["daily", "monthly", "yearly"];
+  if (!allowed.includes(period)) {
+    const err = new Error('period harus "daily", "monthly", atau "yearly"');
     err.statusCode = 400;
     throw err;
   }
@@ -68,28 +97,45 @@ export async function getGoldHistory({ period = "monthly", startDate, endDate } 
     throw err;
   }
 
-  let filtered = await loadGoldEntries();
+  let entries;
 
-  if (start) {
-    filtered = filtered.filter((item) => parseDate(item.date) >= start);
-  }
-
-  if (end) {
-    filtered = filtered.filter((item) => parseDate(item.date) <= end);
-  }
-
-  if (period === "yearly") {
-    const byYear = new Map();
-    for (const item of filtered) {
-      const year = item.date.slice(0, 4);
-      byYear.set(year, item);
+  if (period === "daily" && (await isDatabaseAvailable())) {
+    if (limit && !startDate && !endDate) {
+      entries = await findRecentGoldPrices(limit);
+    } else if (startDate || endDate || limit) {
+      entries = await findGoldPricesInRange({
+        startDate: startDate?.slice(0, 10),
+        endDate: endDate?.slice(0, 10),
+        limit,
+      });
+    } else {
+      entries = await findRecentGoldPrices(365);
     }
-    filtered = [...byYear.values()].sort((a, b) =>
-      a.date.localeCompare(b.date)
-    );
+  } else {
+    let filtered = await loadGoldEntries();
+
+    if (start) {
+      filtered = filtered.filter((item) => parseDate(item.date) >= start);
+    }
+    if (end) {
+      filtered = filtered.filter((item) => parseDate(item.date) <= end);
+    }
+
+    if (period === "yearly") {
+      filtered = aggregateYearly(filtered);
+    } else if (period === "monthly") {
+      filtered = aggregateMonthly(filtered);
+    }
+
+    if (limit) {
+      const n = Math.max(1, Number(limit));
+      filtered = filtered.slice(-n);
+    }
+
+    entries = filtered;
   }
 
-  return filtered.map(toPublicRecord);
+  return entries.map(toPublicRecord);
 }
 
 export async function getLatestGoldPrice() {
@@ -119,7 +165,55 @@ export async function getLatestGoldSnapshot() {
 
   return {
     ...toPublicRecord(latest),
-    pricePerGram: latest.price,
+    pricePerGram: latest.closePrice ?? latest.price,
     source: latest.source ?? "logammulia",
+  };
+}
+
+export async function getGoldStatsSummary(days = 7) {
+  const safeDays = Math.max(1, Math.min(Number(days) || 7, 365));
+
+  if (!(await isDatabaseAvailable())) {
+    const latest = getLatestEntryFromList(goldHistoricalData);
+    if (!latest) return null;
+    return {
+      lastDate: latest.date,
+      latestPrice: latest.price,
+      volumeLatest: null,
+      high7d: latest.price,
+      change7dPct: 0,
+    };
+  }
+
+  const window = await findGoldStatsLastNDays(safeDays);
+  if (window.length === 0) return null;
+
+  const latest = window[window.length - 1];
+  const first = window[0];
+  const latestPrice = latest.closePrice ?? latest.price;
+  const firstPrice = first.closePrice ?? first.price;
+
+  const high7d = window.reduce(
+    (max, row) => Math.max(max, row.highPrice ?? row.price),
+    0
+  );
+
+  const change7dPct =
+    firstPrice === 0
+      ? 0
+      : Number((((latestPrice - firstPrice) / firstPrice) * 100).toFixed(2));
+
+  const dailyReturnPct =
+    latest.dailyReturn != null
+      ? Number((latest.dailyReturn * 100).toFixed(2))
+      : null;
+
+  return {
+    lastDate: latest.date,
+    latestPrice,
+    volumeLatest: latest.volume ?? null,
+    high7d,
+    change7dPct,
+    dailyReturnPct,
   };
 }

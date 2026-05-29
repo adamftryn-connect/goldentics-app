@@ -5,11 +5,19 @@ import { fileURLToPath } from "url";
 import pool from "../src/db/pool.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const schemaPath = path.join(__dirname, "..", "sql", "schema.sql");
+const sqlDir = path.join(__dirname, "..", "sql");
 
 async function migrate() {
-  const sql = fs.readFileSync(schemaPath, "utf8");
-  await pool.query(sql);
+  const files = fs
+    .readdirSync(sqlDir)
+    .filter((f) => f.endsWith(".sql"))
+    .sort();
+
+  for (const file of files) {
+    const sql = fs.readFileSync(path.join(sqlDir, file), "utf8");
+    await pool.query(sql);
+    console.log(`Migrasi OK: ${file}`);
+  }
   console.log("Migrasi database berhasil.");
 }
 

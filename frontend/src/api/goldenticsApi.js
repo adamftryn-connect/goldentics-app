@@ -15,6 +15,21 @@ export async function getLatestGoldPrice() {
   return data.data;
 }
 
+export async function getGoldStatsSummary(days = 7) {
+  const { data } = await apiClient.get("/gold-stats/summary", {
+    params: { days },
+  });
+  return data.data;
+}
+
+/** Tab Grafik → limit hari (data harian) */
+export const GRAFIK_TAB_LIMITS = {
+  "7 Hari": 7,
+  "1 Bulan": 30,
+  "3 Bulan": 90,
+  "1 Tahun": 365,
+};
+
 export async function postPredict(payload) {
   const { data } = await apiClient.post("/predict", payload);
   return data.data;
