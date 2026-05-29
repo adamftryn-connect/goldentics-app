@@ -1,3 +1,5 @@
+const ALLOWED_PREDICTION_DAYS = [7];
+
 export function validatePredictBody(req, res, next) {
   const { gramOfGold, predictionDays } = req.body ?? {};
 
@@ -27,9 +29,16 @@ export function validatePredictBody(req, res, next) {
         error: "predictionDays harus berupa bilangan bulat positif",
       });
     }
+    if (!ALLOWED_PREDICTION_DAYS.includes(days)) {
+      return res.status(400).json({
+        success: false,
+        data: null,
+        error: "Model saat ini hanya mendukung prediksi 7 hari",
+      });
+    }
     req.predictionDays = days;
   } else {
-    req.predictionDays = 30;
+    req.predictionDays = 7;
   }
 
   req.gramOfGold = grams;

@@ -53,7 +53,4 @@ export function logoutUser() {
 /** Map label UI Prediksi → predictionDays backend */
 export const PREDICTION_PERIOD_OPTIONS = [
   { label: "7 Hari ke depan", days: 7 },
-  { label: "14 Hari ke depan", days: 14 },
-  { label: "30 Hari ke depan", days: 30 },
-  { label: "90 Hari ke depan", days: 90 },
 ];

@@ -9,23 +9,58 @@ import {
 } from "../repositories/prediction.repository.js";
 import { isDatabaseAvailable } from "../repositories/goldPrice.repository.js";
 
+const SUPPORTED_PREDICTION_DAYS = 7;
+const HF_SPACE_MODEL_LABEL = "Goldentics HF Space";
+
 function addDays(baseDate, days) {
   const date = new Date(baseDate);
   date.setDate(date.getDate() + days);
   return date.toISOString().slice(0, 10);
 }
 
-function buildRecommendation(trend, percentageChange) {
-  if (trend === "UP") {
-    return "Sebaiknya tunggu harga naik lebih tinggi sebelum menjual";
+const NEUTRAL_THRESHOLD = 0.75;
+
+export function getRecommendationType(percentageChange) {
+  const pct = Number(percentageChange) || 0;
+  if (pct > NEUTRAL_THRESHOLD) return "UP";
+  if (pct < -NEUTRAL_THRESHOLD) return "DOWN";
+  return "HOLD";
+}
+
+function buildRecommendation(recommendationType, predictionDays) {
+  const daysLabel = `${predictionDays} hari`;
+  if (recommendationType === "UP") {
+    return `Berdasarkan analisis AI, harga emas Anda diprediksi naik dalam ${daysLabel}. Pertahankan emas Anda; ini belum waktu yang ideal untuk menjual.`;
   }
-  if (percentageChange < -2) {
-    return "Pertimbangkan untuk membeli emas karena harga diprediksi turun";
+  if (recommendationType === "DOWN") {
+    return `Harga diprediksi turun dalam ${daysLabel}. Tunda pembelian baru; jika butuh likuiditas, pertimbangkan menjual sebagian dengan hati-hati.`;
   }
-  return "Pertimbangkan untuk menahan emas dan pantau perkembangan harga";
+  return `Pergerakan harga diprediksi relatif stabil dalam ${daysLabel}. Pantau pasar sebelum menambah posisi atau menjual.`;
+}
+
+export function extractForecastPricePerGram(hfResponse, targetDay = SUPPORTED_PREDICTION_DAYS) {
+  if (hfResponse == null) {
+    return null;
+  }
+
+  const forecast = hfResponse.forecast;
+  if (!Array.isArray(forecast) || forecast.length === 0) {
+    return null;
+  }
+
+  const match = forecast.find((entry) => Number(entry?.day) === targetDay);
+  const entry = match ?? forecast[forecast.length - 1];
+  const price = Number(entry?.predicted_price);
+
+  return Number.isFinite(price) ? price : null;
 }
 
 function extractModelPrediction(hfResponse) {
+  const fromForecast = extractForecastPricePerGram(hfResponse);
+  if (fromForecast != null) {
+    return fromForecast;
+  }
+
   if (hfResponse == null) {
     return null;
   }
@@ -66,15 +101,23 @@ function mockPrediction(currentPrice, predictionDays) {
 
 export async function predictGoldPrice(
   gramOfGold,
-  predictionDays = 30,
+  predictionDays = SUPPORTED_PREDICTION_DAYS,
   userId = null
 ) {
+  if (predictionDays !== SUPPORTED_PREDICTION_DAYS) {
+    const err = new Error(
+      `Model saat ini hanya mendukung prediksi ${SUPPORTED_PREDICTION_DAYS} hari`
+    );
+    err.statusCode = 400;
+    throw err;
+  }
+
   const currentPricePerGram = await getLatestGoldPrice();
   const currentTotal = currentPricePerGram * gramOfGold;
 
   let predictedPricePerGram = currentPricePerGram;
   let confidence = 0.75;
-  let modelUsed = "LSTM";
+  let modelUsed = HF_SPACE_MODEL_LABEL;
 
   const hfPayload = {
     inputs: {
@@ -86,7 +129,8 @@ export async function predictGoldPrice(
 
   if (isHuggingFaceConfigured()) {
     const hfResponse = await callHuggingFacePrediction(hfPayload);
-    const extracted = extractModelPrediction(hfResponse);
+    const extracted = extractForecastPricePerGram(hfResponse, predictionDays)
+      ?? extractModelPrediction(hfResponse);
 
     if (extracted != null && !Number.isNaN(extracted)) {
       predictedPricePerGram = Math.round(extracted);
@@ -94,12 +138,12 @@ export async function predictGoldPrice(
     } else {
       predictedPricePerGram = mockPrediction(currentPricePerGram, predictionDays);
       confidence = 0.7;
-      modelUsed = "LSTM (fallback)";
+      modelUsed = `${HF_SPACE_MODEL_LABEL} (fallback)`;
     }
   } else {
     predictedPricePerGram = mockPrediction(currentPricePerGram, predictionDays);
     confidence = 0.7;
-    modelUsed = "LSTM (local-fallback)";
+    modelUsed = `${HF_SPACE_MODEL_LABEL} (local-fallback)`;
   }
 
   const predictedTotal = predictedPricePerGram * gramOfGold;
@@ -108,7 +152,8 @@ export async function predictGoldPrice(
     currentTotal === 0
       ? 0
       : Number(((priceChange / currentTotal) * 100).toFixed(2));
-  const trend = priceChange >= 0 ? "UP" : "DOWN";
+  const recommendationType = getRecommendationType(percentageChange);
+  const trend = recommendationType;
   const predictedDate = addDays(new Date(), predictionDays);
 
   const result = {
@@ -118,9 +163,10 @@ export async function predictGoldPrice(
     priceChange,
     percentageChange,
     trend,
+    recommendationType,
     confidence,
     predictedDate,
-    recommendation: buildRecommendation(trend, percentageChange),
+    recommendation: buildRecommendation(recommendationType, predictionDays),
     modelUsed,
   };
 

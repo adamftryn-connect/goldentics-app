@@ -2,17 +2,31 @@ import { useEffect, useMemo, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import FooterSimple from '../components/FooterSimple'
-import { getPredictHistory, postPredict, PREDICTION_PERIOD_OPTIONS } from '../api/goldenticsApi.js'
+import {
+  getPredictHistory,
+  postPredict,
+  getLatestGoldPrice,
+  PREDICTION_PERIOD_OPTIONS,
+} from '../api/goldenticsApi.js'
 import { formatRupiah, formatPercent } from '../utils/format.js'
+import {
+  getRecommendationView,
+  getHistoryTrendDisplay,
+} from '../utils/predictionRecommendation.js'
+import AiRecommendationCard from '../components/AiRecommendationCard.jsx'
 import iconRobot from '../../images/icon/ai-robot-icon.svg'
 import './Prediksi.css'
 
 function Prediksi() {
   const [showResult, setShowResult] = useState(false)
   const [gramOfGold, setGramOfGold] = useState('10')
-  const [predictionDays, setPredictionDays] = useState(30)
+  const [investIdr, setInvestIdr] = useState('')
+  const [pricePerGram, setPricePerGram] = useState(null)
+  const [priceLoading, setPriceLoading] = useState(true)
+  const [predictionDays] = useState(7)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [formError, setFormError] = useState(null)
   const [result, setResult] = useState(null)
   const [hasToken, setHasToken] = useState(
     Boolean(localStorage.getItem('goldentics_token'))
@@ -29,9 +43,80 @@ function Prediksi() {
     return opt?.label ?? `${predictionDays} Hari`
   }, [predictionDays])
 
+  const resultTrendBadge = useMemo(() => {
+    if (!result) return null
+    return getRecommendationView(result, predictionDays).trendBadge
+  }, [result, predictionDays])
+
+  const resultVariant = useMemo(() => {
+    if (!result) return null
+    return getRecommendationView(result, predictionDays).variant
+  }, [result, predictionDays])
+
   useEffect(() => {
     setHasToken(Boolean(localStorage.getItem('goldentics_token')))
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    setPriceLoading(true)
+    getLatestGoldPrice()
+      .then((data) => {
+        if (cancelled) return
+        const price = Number(data?.price)
+        if (price > 0) {
+          setPricePerGram(price)
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setPricePerGram(null)
+      })
+      .finally(() => {
+        if (!cancelled) setPriceLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!pricePerGram) return
+    const grams = Number(gramOfGold)
+    if (grams > 0 && !Number.isNaN(grams)) {
+      setInvestIdr(String(Math.round(grams * pricePerGram)))
+    }
+  }, [pricePerGram])
+
+  function gramsFromIdr(idr) {
+    if (!pricePerGram || idr <= 0) return ''
+    const grams = idr / pricePerGram
+    const rounded = Math.round(grams * 10000) / 10000
+    return String(rounded)
+  }
+
+  function handleGramChange(e) {
+    const value = e.target.value
+    setGramOfGold(value)
+    setFormError(null)
+    const grams = Number(value)
+    if (pricePerGram && grams > 0 && !Number.isNaN(grams)) {
+      setInvestIdr(String(Math.round(grams * pricePerGram)))
+    } else if (value === '') {
+      setInvestIdr('')
+    }
+  }
+
+  function handleIdrChange(e) {
+    const value = e.target.value
+    setInvestIdr(value)
+    setFormError(null)
+    const idr = Number(value)
+    if (pricePerGram && idr > 0 && !Number.isNaN(idr)) {
+      setGramOfGold(gramsFromIdr(idr))
+    } else if (value === '') {
+      setGramOfGold('')
+    }
+  }
 
   async function loadHistory({ reset = false } = {}) {
     const token = localStorage.getItem('goldentics_token')
@@ -60,14 +145,24 @@ function Prediksi() {
   }
 
   async function handlePredict() {
+    const grams = Number(gramOfGold)
+    if (!gramOfGold.trim() || Number.isNaN(grams) || grams <= 0) {
+      setShowResult(true)
+      setFormError('Masukkan jumlah emas lebih dari 0 gram.')
+      setError(null)
+      setResult(null)
+      return
+    }
+
     setShowResult(true)
     setError(null)
+    setFormError(null)
     setLoading(true)
     setResult(null)
 
     try {
       const data = await postPredict({
-        gramOfGold: Number(gramOfGold),
+        gramOfGold: grams,
         predictionDays: Number(predictionDays),
       })
       setResult(data)
@@ -83,6 +178,7 @@ function Prediksi() {
   function handlePredictAgain() {
     setShowResult(false)
     setError(null)
+    setFormError(null)
     setResult(null)
     setLoading(false)
   }
@@ -123,8 +219,9 @@ function Prediksi() {
                     type="number"
                     placeholder="Contoh: 10"
                     value={gramOfGold}
-                    onChange={(e) => setGramOfGold(e.target.value)}
+                    onChange={handleGramChange}
                     min="0"
+                    step="any"
                   />
                   <span className="unit">gram</span>
                 </div>
@@ -136,26 +233,34 @@ function Prediksi() {
               <div className="field">
                 <label>Nilai Investasi</label>
                 <div className="input-wrap">
-                  <input type="number" placeholder="Contoh: 27.000.000" />
+                  <input
+                    type="number"
+                    placeholder="Contoh: 27.000.000"
+                    value={investIdr}
+                    onChange={handleIdrChange}
+                    min="0"
+                    step="1"
+                    disabled={priceLoading || !pricePerGram}
+                  />
                   <span className="unit">IDR</span>
                 </div>
-                <p className="field-hint">Sistem akan mengkonversi ke gram secara otomatis</p>
+                <p className="field-hint">
+                  {priceLoading
+                    ? 'Memuat harga emas untuk konversi…'
+                    : pricePerGram
+                      ? `Konversi otomatis dari harga ${formatRupiah(pricePerGram)}/gram`
+                      : 'Harga emas belum tersedia; gunakan input gram saja.'}
+                </p>
               </div>
 
               <div className="field">
                 <label>Periode Prediksi</label>
-                <select
-                  className="select-field"
-                  value={predictionDays}
-                  onChange={(e) => setPredictionDays(Number(e.target.value))}
-                >
-                  {PREDICTION_PERIOD_OPTIONS.map((opt) => (
-                    <option key={opt.days} value={opt.days}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="period-static" aria-live="polite">
+                  {PREDICTION_PERIOD_OPTIONS[0].label}
+                </div>
               </div>
+
+              {formError ? <p className="field-error">{formError}</p> : null}
 
               <button className="submit-btn" onClick={handlePredict} disabled={loading}>
                 {loading ? 'Memproses…' : 'Dapatkan Prediksi →'}
@@ -183,7 +288,12 @@ function Prediksi() {
                 <div className="result-main">
                   <div className="rm-label">Prediksi ({periodLabel})</div>
 
-                  {error ? (
+                  {formError ? (
+                    <>
+                      <div className="rm-price">Periksa input</div>
+                      <div className="rm-sub">{formError}</div>
+                    </>
+                  ) : error ? (
                     <>
                       <div className="rm-price">Gagal memuat</div>
                       <div className="rm-sub">{error}</div>
@@ -201,8 +311,9 @@ function Prediksi() {
                         <span className="rm-unit"> total</span>
                       </div>
                       <div className="rm-sub">Estimasi harga · {result.predictedDate}</div>
-                      <div className="rm-badge">
-                        {result.trend === 'UP' ? '▲' : '▼'} {formatPercent(result.percentageChange)} dari harga saat ini
+                      <div className={`rm-badge rm-badge--${getRecommendationView(result, predictionDays).variant}`}>
+                        {resultTrendBadge.icon} {resultTrendBadge.label}{' '}
+                        {formatPercent(result.percentageChange)} dari harga saat ini
                       </div>
                     </>
                   )}
@@ -233,47 +344,16 @@ function Prediksi() {
                   </div>
                   <div className="result-mini">
                     <div className="rmi-label">Estimasi</div>
-                    <div className="rmi-val" style={{color:'#16a34a'}}>{result ? formatRupiah(result.predictedPrice) : '—'}</div>
+                    <div className={`rmi-val ${resultVariant ? `rmi-val--${resultVariant}` : ''}`}>
+                      {result ? formatRupiah(result.predictedPrice) : '—'}
+                    </div>
                     <div className="rmi-sub">{result ? `Selisih ${formatRupiah(result.priceChange)}` : '—'}</div>
                   </div>
                 </div>
 
-                <div className="rec-card">
-                  <div className="rec-title">Rekomendasi AI</div>
-                  <div className="rec-item">
-                    <div className="rec-dot-wrap"><div className="rec-dot buy"></div></div>
-                    <div className="rec-content">
-                      <div className="rec-head">Pertimbangkan Beli</div>
-                      <div className="rec-body">{result ? result.recommendation : 'Rekomendasi akan muncul setelah prediksi berhasil.'}</div>
-                    </div>
-                  </div>
-                  <div className="rec-item">
-                    <div className="rec-dot-wrap"><div className="rec-dot hold"></div></div>
-                    <div className="rec-content">
-                      <div className="rec-head">Atau Tahan Posisi</div>
-                      <div className="rec-body">Anda bisa menyimpan prediksi ini dan membandingkan dengan pergerakan harga berikutnya.</div>
-                    </div>
-                  </div>
-                  <div className="rec-item">
-                    <div className="rec-dot-wrap"><div className="rec-dot sell"></div></div>
-                    <div className="rec-content">
-                      <div className="rec-head">Hindari Jual Sekarang</div>
-                      <div className="rec-body">Keputusan investasi tetap di tangan Anda. Gunakan prediksi sebagai insight tambahan.</div>
-                    </div>
-                  </div>
-                  <div className="confidence">
-                    <div className="conf-label">Tingkat Kepercayaan Model AI</div>
-                    <div className="conf-bar-track">
-                      <div
-                        className="conf-bar-fill"
-                        style={{width: `${Math.round(((result?.confidence ?? 0) || 0) * 100)}%`}}
-                      ></div>
-                    </div>
-                    <div className="conf-pct">
-                      {result ? `${Math.round(result.confidence * 100)}% confidence` : '—'}
-                    </div>
-                  </div>
-                </div>
+                {result && !error ? (
+                  <AiRecommendationCard result={result} predictionDays={predictionDays} />
+                ) : null}
               </div>
             )}
           </div>
@@ -318,16 +398,19 @@ function Prediksi() {
                   ) : historyItems.length === 0 ? (
                     <tr><td colSpan={4} className="history-empty">Belum ada riwayat.</td></tr>
                   ) : (
-                    historyItems.map((row) => (
-                      <tr key={row.id}>
-                        <td className="date">{new Date(row.createdAt).toLocaleString('id-ID')}</td>
-                        <td>{row.gramOfGold} gr</td>
-                        <td>{formatRupiah(row.predictedPrice)}</td>
-                        <td className={row.trend === 'UP' ? 'up' : 'down'}>
-                          {row.trend === 'UP' ? '▲ Naik' : '▼ Turun'}
-                        </td>
-                      </tr>
-                    ))
+                    historyItems.map((row) => {
+                      const trendDisplay = getHistoryTrendDisplay(row)
+                      return (
+                        <tr key={row.id}>
+                          <td className="date">{new Date(row.createdAt).toLocaleString('id-ID')}</td>
+                          <td>{row.gramOfGold} gr</td>
+                          <td>{formatRupiah(row.predictedPrice)}</td>
+                          <td className={trendDisplay.className}>
+                            {trendDisplay.icon} {trendDisplay.label}
+                          </td>
+                        </tr>
+                      )
+                    })
                   )}
                 </tbody>
               </table>

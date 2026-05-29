@@ -29,7 +29,7 @@ export async function insertPrediction(userId, result, predictionDays) {
 
 export async function findPredictionsByUserId(userId, limit, offset) {
   const { rows } = await pool.query(
-    `SELECT id, gram_of_gold, predicted_price, trend, created_at
+    `SELECT id, gram_of_gold, predicted_price, trend, percentage_change, created_at
      FROM predictions
      WHERE user_id = $1
      ORDER BY created_at DESC
@@ -45,6 +45,10 @@ function mapHistoryRow(row) {
     gramOfGold: Number(row.gram_of_gold),
     predictedPrice: Number(row.predicted_price),
     trend: row.trend,
+    percentageChange:
+      row.percentage_change != null
+        ? Number(row.percentage_change)
+        : undefined,
     createdAt: row.created_at,
   };
 }
