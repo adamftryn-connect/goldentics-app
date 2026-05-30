@@ -1,3 +1,9 @@
+/**
+ * service prediction AI - POST /api/predict
+ *   - percentageChange > +0.75%  = recommendationType "UP"
+ *   - percentageChange < -0.75%  = "DOWN"
+ *   - selain itu                 = "HOLD"
+ */
 import {
   callHuggingFacePrediction,
   isHuggingFaceConfigured,
@@ -20,6 +26,7 @@ function addDays(baseDate, days) {
 
 const NEUTRAL_THRESHOLD = 0.75;
 
+// Threshold ±0.75% 
 export function getRecommendationType(percentageChange) {
   const pct = Number(percentageChange) || 0;
   if (pct > NEUTRAL_THRESHOLD) return "UP";
@@ -99,6 +106,10 @@ function mockPrediction(currentPrice, predictionDays) {
   return Math.round(currentPrice * (1 + changeRatio));
 }
 
+/**
+ * menghitung prediksi; jika userId + DB ada, insert ke tabel predictions (riwayat).
+ * return object = isi field `data` di response POST /api/predict.
+ */
 export async function predictGoldPrice(
   gramOfGold,
   predictionDays = SUPPORTED_PREDICTION_DAYS,

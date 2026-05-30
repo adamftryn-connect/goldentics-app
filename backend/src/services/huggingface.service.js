@@ -1,3 +1,4 @@
+// integrasi Hugging Face Space - dipanggil internal oleh predict.service.js.
 import axios from "axios";
 
 const HF_TIMEOUT_MS = 15000;

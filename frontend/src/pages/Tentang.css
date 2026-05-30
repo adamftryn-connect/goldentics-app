@@ -304,7 +304,6 @@
 
 .about-info-row a:hover { text-decoration: underline; }
 
-/* Footer — reuse Beranda footer styles via import in component; duplicate minimal for Tentang */
 .footer-about {
   background: #1a1a1a;
   padding: 2.5rem 5% 1.5rem;

@@ -1,3 +1,4 @@
+// import data untuk gold price history
 import "dotenv/config";
 import fs from "fs";
 import path from "path";
@@ -6,19 +7,14 @@ import pool from "../src/db/pool.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const CSV_CANDIDATES = [
-  path.join(__dirname, "..", "data", "gold_historis.csv"),
-  path.join(__dirname, "..", "data gold historis", "gold_historis.csv"),
-];
+const CSV_PATH = path.join(__dirname, "..", "data", "gold_historis.csv");
 
 const BATCH_SIZE = 500;
 
 function resolveCsvPath() {
-  for (const p of CSV_CANDIDATES) {
-    if (fs.existsSync(p)) return p;
-  }
+  if (fs.existsSync(CSV_PATH)) return CSV_PATH;
   throw new Error(
-    `CSV tidak ditemukan. Letakkan gold_historis.csv di backend/data/ atau backend/data gold historis/`
+    `CSV tidak ditemukan. Letakkan gold_historis.csv di backend/data/`
   );
 }
 

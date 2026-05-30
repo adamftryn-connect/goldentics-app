@@ -5,6 +5,8 @@ import {
 } from "../services/auth.service.js";
 import { sendSuccess } from "../utils/response.js";
 
+// POST /api/auth/register
+
 export async function registerHandler(req, res, next) {
   try {
     const { email, password, fullName } = req.body ?? {};
@@ -15,6 +17,7 @@ export async function registerHandler(req, res, next) {
   }
 }
 
+// POST /api/auth/login
 export async function loginHandler(req, res, next) {
   try {
     const { email, password } = req.body ?? {};
@@ -25,6 +28,7 @@ export async function loginHandler(req, res, next) {
   }
 }
 
+// GET /api/auth/me
 export async function meHandler(req, res, next) {
   try {
     const data = await getUserProfile(req.user.id);

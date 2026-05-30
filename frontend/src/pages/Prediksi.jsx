@@ -166,7 +166,7 @@ function Prediksi() {
         predictionDays: Number(predictionDays),
       })
       setResult(data)
-      // Jika login, backend menyimpan riwayat otomatis → refresh history
+      // Jika login, backend menyimpan riwayat otomatis = refresh history
       await loadHistory({ reset: true })
     } catch (e) {
       setError(e?.message || 'Gagal melakukan prediksi')
@@ -189,7 +189,6 @@ function Prediksi() {
     if (token) {
       loadHistory({ reset: true })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (

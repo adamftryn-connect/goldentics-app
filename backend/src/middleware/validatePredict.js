@@ -1,3 +1,4 @@
+// validasi body POST /api/predict
 const ALLOWED_PREDICTION_DAYS = [7];
 
 export function validatePredictBody(req, res, next) {

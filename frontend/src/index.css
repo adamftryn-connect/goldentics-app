@@ -216,7 +216,7 @@ body {
 .stats-chg {
   font-size: 0.62rem;
   margin-top: 0.2rem;
-  color: #555;
+  color: #c9910a;
 }
 
 .stats-chg.up {
@@ -335,7 +335,7 @@ body {
 }
 
 /* =============================================
-   FOOTER SIMPLE — shared (Grafik, Kalkulator, Prediksi)
+   FOOTER SIMPLE — Grafik, Kalkulator, Prediksi
    ============================================= */
 .footer-simple {
   background: #1a1a1a;

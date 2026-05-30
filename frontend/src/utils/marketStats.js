@@ -1,7 +1,7 @@
 import { formatRupiah, formatPercent } from './format.js'
 import { formatGoldDateId } from './goldChart.js'
 
-export const VOLUME_WINDOW_LABEL = '24j'
+export const VOLUME_WINDOW_LABEL = '24j terakhir'
 
 /** Volume utama: "1.261 Lot" (baris kedua; baris ketiga pakai VOLUME_WINDOW_LABEL) */
 export function formatVolumeLot(volume) {

@@ -1,7 +1,7 @@
-import pool from "../db/pool.js";
+import { queryWithRetry } from "../db/query.js";
 
 export async function findUserByEmail(email) {
-  const { rows } = await pool.query(
+  const { rows } = await queryWithRetry(
     `SELECT id, email, password_hash, full_name, created_at, updated_at
      FROM users WHERE email = $1`,
     [email.toLowerCase().trim()]
@@ -10,7 +10,7 @@ export async function findUserByEmail(email) {
 }
 
 export async function findUserById(id) {
-  const { rows } = await pool.query(
+  const { rows } = await queryWithRetry(
     `SELECT id, email, full_name, created_at, updated_at
      FROM users WHERE id = $1`,
     [id]
@@ -19,7 +19,7 @@ export async function findUserById(id) {
 }
 
 export async function createUser({ email, passwordHash, fullName }) {
-  const { rows } = await pool.query(
+  const { rows } = await queryWithRetry(
     `INSERT INTO users (email, password_hash, full_name)
      VALUES ($1, $2, $3)
      RETURNING id, email, full_name, created_at, updated_at`,

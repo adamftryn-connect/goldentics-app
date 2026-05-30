@@ -6,6 +6,5 @@ npm-debug.log*
 .env
 backend/.env
 
-# Claude Code internal
-.claude/
-CLAUDE.md
+# Build output
+frontend/dist/

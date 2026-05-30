@@ -1,4 +1,4 @@
--- Goldentics PostgreSQL schema
+-- database schema
 
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,

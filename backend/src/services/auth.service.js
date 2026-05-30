@@ -1,3 +1,7 @@
+/**
+ * service authentication
+ * registerUser / loginUser return { token, user } untuk di simpan di localStorage
+ */
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import {
@@ -27,6 +31,7 @@ function signToken(userId) {
   );
 }
 
+// verifikasi JWT dari header Bearer; return { userId } atau null
 export function verifyToken(token) {
   try {
     const payload = jwt.verify(token, getJwtSecret());
@@ -77,6 +82,7 @@ export async function registerUser({ email, password, fullName }) {
   return { token, user: toPublicUser(user) };
 }
 
+// return shape sama dengan register
 export async function loginUser({ email, password }) {
   const normalizedEmail = validateEmail(email);
   validatePassword(password);

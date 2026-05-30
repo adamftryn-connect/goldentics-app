@@ -1,9 +1,22 @@
+//Kontrak API selaras dengan backend Express menghubungkan halaman React ke API.
 import apiClient from "./client.js";
 
-/**
- * Kontrak API selaras dengan backend Express.
- * Gunakan modul ini saat menghubungkan halaman React ke API.
- */
+const AUTH_RETRY_DELAY_MS = 400;
+
+async function postWithRetry(url, payload, maxAttempts = 2) {
+  let lastError;
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    try {
+      return await apiClient.post(url, payload);
+    } catch (err) {
+      lastError = err;
+      const canRetry = err?.retryable && attempt < maxAttempts - 1;
+      if (!canRetry) throw err;
+      await new Promise((r) => setTimeout(r, AUTH_RETRY_DELAY_MS));
+    }
+  }
+  throw lastError;
+}
 
 export async function getGoldHistory(params = {}) {
   const { data } = await apiClient.get("/gold-history", { params });
@@ -22,7 +35,7 @@ export async function getGoldStatsSummary(days = 7) {
   return data.data;
 }
 
-/** Tab Grafik → limit hari (data harian) */
+// Tab Grafik - limit hari (data harian)
 export const GRAFIK_TAB_LIMITS = {
   "7 Hari": 7,
   "1 Bulan": 30,
@@ -41,7 +54,7 @@ export async function getPredictHistory(params = {}) {
 }
 
 export async function registerUser(payload) {
-  const { data } = await apiClient.post("/auth/register", payload);
+  const { data } = await postWithRetry("/auth/register", payload);
   if (data.data?.token) {
     localStorage.setItem("goldentics_token", data.data.token);
   }
@@ -49,7 +62,7 @@ export async function registerUser(payload) {
 }
 
 export async function loginUser(payload) {
-  const { data } = await apiClient.post("/auth/login", payload);
+  const { data } = await postWithRetry("/auth/login", payload);
   if (data.data?.token) {
     localStorage.setItem("goldentics_token", data.data.token);
   }
@@ -65,7 +78,6 @@ export function logoutUser() {
   localStorage.removeItem("goldentics_token");
 }
 
-/** Map label UI Prediksi → predictionDays backend */
 export const PREDICTION_PERIOD_OPTIONS = [
   { label: "7 Hari ke depan", days: 7 },
 ];

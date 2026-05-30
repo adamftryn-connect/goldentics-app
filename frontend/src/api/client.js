@@ -1,8 +1,6 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  // Dev: gunakan proxy Vite via "/api"
-  // Prod (mis. Vercel): set VITE_API_BASE_URL=https://<backend-public-url>/api
   baseURL: import.meta.env.VITE_API_BASE_URL || "/api",
   headers: { "Content-Type": "application/json" },
   timeout: 20000,
@@ -25,11 +23,28 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    const message =
-      error.response?.data?.error ||
+    const status = error.response?.status;
+    const serverMessage = error.response?.data?.error;
+    const isNetworkError = !error.response;
+
+    let message =
+      serverMessage ||
       error.message ||
       "Tidak dapat terhubung ke server";
-    return Promise.reject(new Error(message));
+
+    if (isNetworkError) {
+      message =
+        "Koneksi ke server terputus. Pastikan backend berjalan, lalu coba lagi.";
+    } else if (status === 503) {
+      message = serverMessage || "Layanan sementara tidak tersedia. Coba lagi.";
+    } else if (status >= 500) {
+      message = serverMessage || "Server sibuk. Silakan coba lagi.";
+    }
+
+    const wrapped = new Error(message);
+    wrapped.retryable = isNetworkError || (status != null && status >= 500);
+    wrapped.status = status;
+    return Promise.reject(wrapped);
   }
 );
 

@@ -2,8 +2,7 @@
    PAGE 2: GRAFIK
    ============================================= */
 
-/* .main-grafik: scoped agar tidak konflik dengan .main di Kalkulator/Prediksi */
-.main-grafik {
+   .main-grafik {
   padding: 2.5rem 5% 4rem;
 }
 

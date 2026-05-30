@@ -108,7 +108,6 @@
   color: #c9910a;
 }
 
-/* Panel kanan — ukuran konsisten (hero & section edu) */
 .beranda-visual {
   width: 100%;
   min-height: 380px;
@@ -248,7 +247,6 @@
   color: #f5d98a;
 }
 
-/* Visuals */
 .vis-gold {
   background: #fbf7ee;
   display: flex;

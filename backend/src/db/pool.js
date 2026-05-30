@@ -10,14 +10,29 @@ if (!process.env.DATABASE_URL) {
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  max: 10,
+  connectionTimeoutMillis: 10_000,
+  idleTimeoutMillis: 30_000,
 });
+
+pool.on("error", (err) => {
+  console.error("[db pool] koneksi idle error:", err.message);
+});
+
+export async function warmupDatabase() {
+  if (!process.env.DATABASE_URL) {
+    return false;
+  }
+  await pool.query("SELECT 1");
+  return true;
+}
 
 export async function checkDatabaseConnection() {
   if (!process.env.DATABASE_URL) {
     return false;
   }
   try {
-    await pool.query("SELECT 1");
+    await warmupDatabase();
     return true;
   } catch {
     return false;

@@ -170,7 +170,13 @@ function Beranda() {
             <div className="sec-point"><span className="point-dot"></span>Pandemi 2020: emas mencatat rekor tertinggi sepanjang masa ($2.075/oz).</div>
             <div className="sec-point"><span className="point-dot"></span>Inflasi 2022–2023: emas bertahan sementara aset kripto anjlok drastis.</div>
           </div>
-          <button className="sec-link light">Lihat data historis →</button>
+          <button
+            type="button"
+            className="sec-link light"
+            onClick={() => navigate('/grafik')}
+          >
+            Lihat data historis →
+          </button>
         </div>
         <div>
           <div className="vis-safe">
